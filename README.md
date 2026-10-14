@@ -14,7 +14,9 @@ unless hovered"** (default `SKHideWindowTitleBar`, also settable with
 the title bar reserves no space, so the first row of the PDF is drawn at the first row of the window.
 The toolbar hides with it, and the side panes keep their top inset clear of that strip, so the
 contents pane's tab buttons and search field stay clickable while the chrome is hidden. Viewport
-padding and page gap settings live in **Settings → General**.
+padding and page gap settings live in **Settings → General**. In horizontal continuous display mode
+the Contents pane's destinations keep the start of the target page clear of the pane, and a jump
+briefly highlights the destination.
 
 ## Installation
 
@@ -39,7 +41,7 @@ The fork keeps upstream's bundle identifier on purpose, so `kxskim` conflicts wi
 - ad-hoc signed; the Sparkle feed still points at upstream's appcast, so "Check for Updates" offers
   plain Skim and would replace this build
 - the current `Skim-1.7.17.dmg` has
-  `sha256 67b4677229d7bdc02fc80ab6e427c6c40aaaaec3acbc8a2c93bd726db8590e9c`
+  `sha256 191c343200f6269de2317534baef112f5f4d1f76076beb1e8b90136c240d549a`
 - the first `Skim-1.7.17.dmg` published had invalidated nested code signatures: the embedded
   frameworks are signed when copied in and the release build then stripped their headers, leaving
   seals that referenced files which no longer existed, so Gatekeeper reported `"Skim" is damaged and
