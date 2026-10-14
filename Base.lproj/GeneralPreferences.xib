@@ -144,6 +144,16 @@
                         <binding destination="58" name="value" keyPath="values.SKRememberSnapshots" id="65"/>
                     </connections>
                 </button>
+                <button toolTip="Hide the title bar, including the close, minimize, and zoom buttons; move the pointer to the top of the window to show them" horizontalHuggingPriority="252" verticalHuggingPriority="750" imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hTB-1a-b2">
+                    <rect key="frame" x="18" y="249" width="212" height="18"/>
+                    <buttonCell key="cell" type="check" title="Hide window title bar unless hovered" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="hTB-2a-b2">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <binding destination="58" name="value" keyPath="values.SKHideWindowTitleBar" id="hTB-2b-b2"/>
+                    </connections>
+                </button>
                 <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="19">
                     <rect key="frame" x="12" y="50" width="344" height="5"/>
                 </box>
@@ -365,9 +375,12 @@
                 <constraint firstItem="11" firstAttribute="trailing" secondItem="5" secondAttribute="trailing" id="fmK-oo-I6v"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="20" secondAttribute="trailing" constant="20" symbolic="YES" id="g4n-FP-2OB"/>
                 <constraint firstItem="13" firstAttribute="width" secondItem="14" secondAttribute="width" id="iDb-LY-iDA"/>
+                <constraint firstItem="hTB-1a-b2" firstAttribute="top" secondItem="18" secondAttribute="bottom" constant="6" id="hTB-3a-b2"/>
+                <constraint firstItem="hTB-1a-b2" firstAttribute="leading" secondItem="hos-Of-u1Q" secondAttribute="leading" id="hTB-3b-b2"/>
+                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="hTB-1a-b2" secondAttribute="trailing" constant="20" id="hTB-3c-b2"/>
                 <constraint firstItem="4" firstAttribute="top" secondItem="6" secondAttribute="bottom" constant="12" id="jmv-eQ-PmW"/>
                 <constraint firstItem="8" firstAttribute="trailing" secondItem="5" secondAttribute="trailing" id="jne-As-Stw"/>
-                <constraint firstItem="14" firstAttribute="top" secondItem="18" secondAttribute="bottom" constant="8" id="kFa-WK-niq"/>
+                <constraint firstItem="14" firstAttribute="top" secondItem="hTB-1a-b2" secondAttribute="bottom" constant="8" id="kFa-WK-niq"/>
                 <constraint firstItem="6" firstAttribute="trailing" secondItem="5" secondAttribute="trailing" id="klH-cN-ajl"/>
                 <constraint firstItem="I5T-QF-Xgz" firstAttribute="leading" secondItem="hos-Of-u1Q" secondAttribute="leading" id="klO-fG-4YP"/>
                 <constraint firstItem="duc-5M-yv6" firstAttribute="leading" secondItem="20" secondAttribute="trailing" constant="8" symbolic="YES" id="kpP-fK-RP0"/>

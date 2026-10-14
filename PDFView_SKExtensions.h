@@ -68,6 +68,8 @@ typedef struct _SKDestination {
 
 - (void)goAndScrollToPage:(PDFPage *)page;
 
+- (CGFloat)horizontalScrollOriginForPage:(PDFPage *)page;
+
 - (NSRect)boundsIncludingMarginsForPage:(PDFPage *)page;
 
 - (void)setCursorForMouse:(nullable NSEvent *)event;

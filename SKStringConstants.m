@@ -110,6 +110,7 @@ NSString * const SKSwatchColorsKey = @"SKSwatchColors";
 NSString * const SKDefaultPDFDisplaySettingsKey = @"SKDefaultPDFDisplaySettings";
 NSString * const SKDefaultFullScreenPDFDisplaySettingsKey = @"SKDefaultFullScreenPDFDisplaySettings";
 NSString * const SKUseSettingsFromPDFKey = @"SKUseSettingsFromPDF";
+NSString * const SKHideWindowTitleBarKey = @"SKHideWindowTitleBar";
 NSString * const SKShowStatusBarKey = @"SKShowStatusBar";
 NSString * const SKShowBookmarkStatusBarKey = @"SKShowBookmarkStatusBar";
 NSString * const SKShowNotesStatusBarKey = @"SKShowNotesStatusBar";

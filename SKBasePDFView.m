@@ -293,7 +293,8 @@ static inline NSArray *defaultKeysToObserve() {
     CGFloat margin = 0.0;
     if ([self displaysPageBreaks])
         margin = [self pageBreakMargins].left;
-    bounds.origin.x = fmin(fmax(fmin(NSMidX(pageBounds) - 0.5 * NSWidth(bounds), NSMinX(pageBounds) - margin), NSMinX(docRect)), NSMaxX(docRect) - NSWidth(bounds));
+    CGFloat inset = [clipView contentInsets].left;
+    bounds.origin.x = fmin(fmax(fmin(NSMidX(pageBounds) - 0.5 * NSWidth(bounds), NSMinX(pageBounds) - margin - inset), NSMinX(docRect) - inset), NSMaxX(docRect) - NSWidth(bounds));
     if (action == @selector(goToPreviousPage:))
         [super goToPreviousPage:nil];
     else if (action == @selector(goToNextPage:))
@@ -338,11 +339,8 @@ static inline NSArray *defaultKeysToObserve() {
         else
             bounds.origin.y = fmax(fmin(fmax(NSMinY(pageRect) - 0.5 * (NSHeight(bounds) - fmax(scrollerWidth, inset)), NSMaxY(pageRect) + margin - NSHeight(bounds) + inset), NSMaxY(docRect) - NSHeight(bounds) + inset), NSMinY(docRect));
     }
-    if (horizontally) {
-        if ([self displaysPageBreaks])
-            margin = [self pageBreakMargins].left;
-        bounds.origin.x = fmin(NSMinX(pageRect) - margin, NSMaxX(docRect) - NSWidth(bounds));
-    }
+    if (horizontally)
+        bounds.origin.x = [self horizontalScrollOriginForPage:page];
     [clipView scrollToPoint:bounds.origin];
     [scrollView reflectScrolledClipView:clipView];
 }
@@ -443,6 +441,8 @@ static inline NSArray *defaultKeysToObserve() {
             bounds.origin.y -= [clipView contentInsets].top;
         else
             bounds.origin.y -= NSHeight(bounds) - [clipView contentInsets].top;
+        if ([self displayMode] == kPDFDisplaySinglePageContinuous && [self displayDirection] == kPDFDisplayDirectionHorizontal)
+            bounds.origin.x = [self horizontalScrollOriginForPage:page];
         bounds = [clipView constrainBoundsRect:bounds];
         if (NSEqualPoints(bounds.origin, origin) == NO) {
             [clipView scrollToPoint:bounds.origin];
@@ -458,6 +458,17 @@ static inline NSArray *defaultKeysToObserve() {
     if ([destination zoom] < kPDFDestinationUnspecifiedValue && [destination zoom] > 0.0 && [[NSUserDefaults standardUserDefaults] boolForKey:SKNeverChangeZoomFromLinksKey] == NO)
         [self setScaleFactor:[destination zoom]];
     [super goToDestination:destination];
+    // PDFKit aligns the destination point with the leading edge of the visible area, which in horizontal
+    // display mode scrolls the start of the page out of view; align the page itself with the leading inset
+    // instead, the way the vertical scrolling aligns its top edge with the top inset
+    if ([self displayMode] == kPDFDisplaySinglePageContinuous && [self displayDirection] == kPDFDisplayDirectionHorizontal) {
+        NSScrollView *scrollView = [self embeddedScrollView];
+        NSClipView *clipView = [scrollView contentView];
+        NSRect bounds = [clipView bounds];
+        bounds.origin.x = [self horizontalScrollOriginForPage:[destination page]];
+        [clipView scrollToPoint:bounds.origin];
+        [scrollView reflectScrolledClipView:clipView];
+    }
 }
 
 - (void)keyDown:(NSEvent *)event {

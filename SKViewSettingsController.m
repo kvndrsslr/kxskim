@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 @implementation SKViewSettingsController
 
-@synthesize custom, useSettingsFromPDF, autoScales, scaleFactor, displayMode, displayDirection, displaysAsBook, displaysRTL, displaysPageBreaks, displayBox;
+@synthesize custom, useSettingsFromPDF, autoScales, scaleFactor, displayMode, displayDirection, displaysAsBook, displaysRTL, displaysPageBreaks, displayBox, paddingTop, paddingLeft, paddingBottom, paddingRight, pageGap;
 @dynamic extendedDisplayMode, settings;
 
 + (NSSet *)keyPathsForValuesAffectingValueForKey:(NSString *)key {
@@ -56,7 +56,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 }
 
 - (NSArray *)persistentKeys {
-    return @[@"autoScales", @"scaleFactor", @"displayMode", @"displayDirection", @"displaysAsBook", @"displaysRTL", @"displaysPageBreaks", @"displayBox"];
+    return @[@"autoScales", @"scaleFactor", @"displayMode", @"displayDirection", @"displaysAsBook", @"displaysRTL", @"displaysPageBreaks", @"displayBox", @"paddingTop", @"paddingLeft", @"paddingBottom", @"paddingRight", @"pageGap"];
 }
 
 - (instancetype)initWithSettings:(NSDictionary *)settings defaultSettings:(NSDictionary *)aDefaultSettings {
@@ -122,8 +122,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 }
 
 - (void)setSettings:(NSDictionary *)settings {
+    // Settings may be missing keys that were introduced after they were saved; use the default
+    // settings and finally the registered defaults for those keys rather than their zero values.
+    NSDictionary *registeredSettings = [[[NSUserDefaults standardUserDefaults] volatileDomainForName:NSRegistrationDomain] objectForKey:SKDefaultPDFDisplaySettingsKey];
     for (NSString *key in [self persistentKeys]) {
         id value = [settings objectForKey:key];
+        if (value == nil)
+            value = [defaultSettings objectForKey:key];
+        if (value == nil)
+            value = [registeredSettings objectForKey:key];
         if (value)
             [self setValue:value forKey:key];
     }

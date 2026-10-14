@@ -44,6 +44,16 @@
 			<integer>0</integer>
 			<key>displayBox</key>
 			<integer>1</integer>
+			<key>paddingTop</key>
+			<real>0</real>
+			<key>paddingLeft</key>
+			<real>0</real>
+			<key>paddingBottom</key>
+			<real>0</real>
+			<key>paddingRight</key>
+			<real>0</real>
+			<key>pageGap</key>
+			<real>9.5</real>
 		</dict>
 		<key>SKDefaultFullScreenPDFDisplaySettings</key>
 		<dict/>
@@ -222,6 +232,8 @@
 		<true/>
 		<key>SKShouldSetCreatorCode</key>
 		<false/>
+		<key>SKHideWindowTitleBar</key>
+		<false/>
 		<key>SKShowStatusBar</key>
 		<true/>
 		<key>SKShowBookmarkStatusBar</key>
@@ -263,6 +275,7 @@
 			<string>SKWriteLegacySkimNotes</string>
 			<string>SKAutoSaveSkimNotes</string>
 			<string>SKSnapshotsOnTop</string>
+			<string>SKHideWindowTitleBar</string>
 			<string>SKSavePasswordOption</string>
 		</array>
 		<key>DisplayPreferences</key>

@@ -180,6 +180,24 @@ static inline CGFloat physicalScaleFactorForView(NSView *view) {
     return (SKDestination){[page pageIndex], point};
 }
 
+// the horizontal origin that aligns the leading edge of a page with the leading content inset, the
+// way the vertical scrolling aligns its top edge with the top content inset; it is clamped to the
+// scrollable document range, and keeps the current origin when the document fits the clip view
+- (CGFloat)horizontalScrollOriginForPage:(PDFPage *)page {
+    NSScrollView *scrollView = [self embeddedScrollView];
+    NSClipView *clipView = [scrollView contentView];
+    NSRect bounds = [clipView bounds];
+    NSRect docRect = [[scrollView documentView] frame];
+    if (NSWidth(docRect) <= NSWidth(bounds))
+        return bounds.origin.x;
+    NSRect pageRect = [self convertRect:[self convertRect:[page boundsForBox:[self displayBox]] fromPage:page] toView:clipView];
+    CGFloat inset = [clipView contentInsets].left;
+    CGFloat margin = 0.0;
+    if ([self displaysPageBreaks])
+        margin = [self pageBreakMargins].left;
+    return fmin(fmax(NSMinX(pageRect) - margin - inset, NSMinX(docRect) - inset), NSMaxX(docRect) - NSWidth(bounds));
+}
+
 - (void)goToSKDestination:(SKDestination)dest {
     PDFPage *page = [[self document] pageAtIndex:dest.pageIndex];
     if (NSEqualPoints(dest.point, SKUnspecifiedPoint)) {
@@ -197,6 +215,8 @@ static inline CGFloat physicalScaleFactorForView(NSView *view) {
                 bounds.origin.y -= [clipView contentInsets].top;
             else
                 bounds.origin.y -= NSHeight(bounds) - [clipView contentInsets].top;
+            if ([self displayMode] == kPDFDisplaySinglePageContinuous && [self displayDirection] == kPDFDisplayDirectionHorizontal)
+                bounds.origin.x = [self horizontalScrollOriginForPage:page];
             bounds = [clipView constrainBoundsRect:bounds];
             if (NSEqualPoints(bounds.origin, origin) == NO) {
                 [clipView scrollToPoint:bounds.origin];

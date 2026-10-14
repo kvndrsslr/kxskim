@@ -66,10 +66,111 @@
 
 #pragma mark -
 
+@class SKTitleBarHoverView;
+
+@interface SKMainWindow ()
+{
+    SKTitleBarHoverView *titleBarHoverView;
+    BOOL toolbarShown;
+}
+- (void)setTitleBarHovered:(BOOL)hovered;
+@end
+
+@interface SKTitleBarHoverView : NSView
+@property (nullable, weak) SKMainWindow *mainWindow;
+@end
+
+@implementation SKTitleBarHoverView
+
+- (NSView *)hitTest:(NSPoint)point {
+    return nil;
+}
+
+- (void)updateTrackingAreas {
+    for (NSTrackingArea *area in [self trackingAreas])
+        [self removeTrackingArea:area];
+    [super updateTrackingAreas];
+    [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:NSZeroRect options:NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveAlways | NSTrackingInVisibleRect owner:self userInfo:nil]];
+}
+
+- (void)mouseMoved:(NSEvent *)theEvent {
+    NSWindow *window = [self window];
+    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+    [[self mainWindow] setTitleBarHovered:NSMaxY([self bounds]) - point.y <= NSHeight([window frame]) - NSHeight([window contentLayoutRect])];
+}
+
+- (void)mouseExited:(NSEvent *)theEvent {
+    [[self mainWindow] setTitleBarHovered:NO];
+}
+
+@end
+
+#pragma mark -
+
 @implementation SKMainWindow
 
-@synthesize autoTitleVisibility;
+@synthesize autoTitleVisibility, autoHidesTitleBar;
 @dynamic delegate;
+
+- (void)updateTitleBarChrome {
+    BOOL hidden = autoHidesTitleBar && titleBarHovered == NO && 0 == ([self styleMask] & NSWindowStyleMaskFullScreen);
+    // the toolbar hides and shows together with the title bar, but only its *visibility* is
+    // suppressed while the chrome is hidden; the user's preference in toolbarShown is never
+    // changed here, so it is restored exactly when the chrome shows again
+    if (autoHidesTitleBar) {
+        BOOL showToolbar = toolbarShown && hidden == NO;
+        if ([[self toolbar] isVisible] != showToolbar)
+            [[self toolbar] setVisible:showToolbar];
+    }
+    [self setTitlebarAppearsTransparent:hidden];
+    [self setTitlebarSeparatorStyle:hidden ? NSTitlebarSeparatorStyleNone : NSTitlebarSeparatorStyleAutomatic];
+    if (hidden) {
+        [self setTitleVisibility:NSWindowTitleHidden];
+    } else if (autoTitleVisibility == SKWindowTitleHiddenForTabBar) {
+        NSTitlebarAccessoryViewController *tabBarController = [self safeTabBarViewController];
+        [self setTitleVisibility:(tabBarController && [[self titlebarAccessoryViewControllers] containsObject:tabBarController]) ? NSWindowTitleHidden : NSWindowTitleVisible];
+    } else if (autoTitleVisibility) {
+        [self updateForToolbarVisibility:[[self toolbar] isVisible]];
+    } else {
+        [self setTitleVisibility:NSWindowTitleVisible];
+    }
+    for (NSWindowButton button = NSWindowCloseButton; button <= NSWindowZoomButton; button++)
+        [[self standardWindowButton:button] setHidden:hidden];
+}
+
+- (void)setTitleBarHovered:(BOOL)hovered {
+    if (titleBarHovered == hovered)
+        return;
+    titleBarHovered = hovered;
+    [self updateTitleBarChrome];
+}
+
+- (void)setAutoHidesTitleBar:(BOOL)flag {
+    if (autoHidesTitleBar == flag)
+        return;
+    autoHidesTitleBar = flag;
+    if (flag) {
+        // remember whether the user wants the toolbar, as its visibility is the truth we
+        // need to restore when the chrome shows or the feature is turned off again
+        toolbarShown = [[self toolbar] isVisible];
+        NSView *frameView = [[self contentView] superview];
+        if (titleBarHoverView == nil) {
+            titleBarHoverView = [[SKTitleBarHoverView alloc] initWithFrame:[frameView bounds]];
+            [titleBarHoverView setMainWindow:self];
+            [titleBarHoverView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+        }
+        [frameView addSubview:titleBarHoverView positioned:NSWindowAbove relativeTo:nil];
+        titleBarHovered = NO;
+    } else {
+        [titleBarHoverView removeFromSuperview];
+        titleBarHoverView = nil;
+        titleBarHovered = YES;
+        // the feature is off, so the user's preference is the effective visibility
+        if ([[self toolbar] isVisible] != toolbarShown)
+            [[self toolbar] setVisible:toolbarShown];
+    }
+    [self updateTitleBarChrome];
+}
 
 - (void)setStyleMask:(NSWindowStyleMask)styleMask {
     if (0 != (styleMask & NSWindowStyleMaskFullScreen) && 0 == ([self styleMask] & NSWindowStyleMaskFullScreen) && [[self delegate] respondsToSelector:@selector(windowWillEnterFullScreenStyle:)])
@@ -77,6 +178,8 @@
     else if (0 == (styleMask & NSWindowStyleMaskFullScreen) && 0 != ([self styleMask] & NSWindowStyleMaskFullScreen) && [[self delegate] respondsToSelector:@selector(windowWillExitFullScreenStyle:)])
         [[self delegate] windowWillExitFullScreenStyle:self];
     [super setStyleMask:styleMask];
+    if (autoHidesTitleBar)
+        [self updateTitleBarChrome];
 }
 
 - (void)sendEvent:(NSEvent *)theEvent {
@@ -154,6 +257,21 @@
         }
     }
     [super toggleToolbarShown:sender];
+    if (autoHidesTitleBar) {
+        // the user's toggle is the truth, so record it as the preference and then re-apply the
+        // hiding of the chrome (the toolbar may have been shown only to toggle its state)
+        toolbarShown = [[self toolbar] isVisible];
+        [self updateTitleBarChrome];
+    }
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
+    BOOL enabled = [super validateMenuItem:menuItem];
+    // the check mark must show the user's preference, not whether the toolbar is currently
+    // hidden because the title bar is hidden until hovered
+    if (autoHidesTitleBar && [menuItem action] == @selector(toggleToolbarShown:))
+        [menuItem setState:toolbarShown ? NSControlStateValueOn : NSControlStateValueOff];
+    return enabled;
 }
 
 - (void)addTitlebarAccessoryViewController:(NSTitlebarAccessoryViewController *)childViewController {

@@ -103,6 +103,10 @@ extern NSNotificationName const SKMainWindowControllerDidShowOrHideOverviewNotif
     
     SKFindController                    *findController;
     NSLayoutConstraint                  *findBarTopConstraint;
+    NSLayoutConstraint                  *pdfPaneTopConstraint;
+    NSLayoutConstraint                  *pdfPaneLeftConstraint;
+    NSLayoutConstraint                  *pdfPaneBottomConstraint;
+    NSLayoutConstraint                  *pdfPaneRightConstraint;
     
     SKFieldEditor                       *fieldEditor;
     
@@ -192,6 +196,7 @@ extern NSNotificationName const SKMainWindowControllerDidShowOrHideOverviewNotif
         unsigned int wantsPresentationOrFullScreen:1;
         unsigned int hasCropped:1;
         unsigned int fullSizeContent:1;
+        unsigned int hidesTitleBar:1;
         unsigned int needsCleanup:1;
         unsigned int thumbnailsNeedUpdateAfterPresentaton:1;
         unsigned int thumbnailsUpdatedDuringPresentaton:1;
@@ -209,6 +214,8 @@ extern NSNotificationName const SKMainWindowControllerDidShowOrHideOverviewNotif
 - (void)showNote:(PDFAnnotation *)annotation;
 
 - (nullable NSWindowController *)windowControllerForNote:(PDFAnnotation *)annotation;
+
+- (CGFloat)titleBarInset;
 
 @property (nonatomic, nullable, readonly) SKPDFView *pdfView;
 @property (nonatomic, nullable, readonly) PDFDocument *pdfDocument;

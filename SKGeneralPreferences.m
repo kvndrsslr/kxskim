@@ -44,6 +44,7 @@
 #import "NSGraphics_SKExtensions.h"
 #import "NSImage_SKExtensions.h"
 #import "SKViewSettingsController.h"
+#import "SKMainWindowController.h"
 #import "NSWindowController_SKExtensions.h"
 #import "SKApplication.h"
 
@@ -100,9 +101,16 @@
     
     [viewSettings beginSheetModalForWindow:[[self view] window] completionHandler:^(NSModalResponse result){
         if (result == NSModalResponseOK) {
-            [sud setObject:[viewSettings settings] forKey:key];
+            NSDictionary *settings = [viewSettings settings];
+            [sud setObject:settings forKey:key];
             if (fullScreen == NO)
                 [sud setBool:[viewSettings useSettingsFromPDF] forKey:SKUseSettingsFromPDFKey];
+            // apply the view padding and page gap to the open documents immediately, leaving their other display settings alone
+            for (NSWindow *window in [NSApp windows]) {
+                NSWindowController *controller = [window windowController];
+                if ([controller isKindOfClass:[SKMainWindowController class]])
+                    [[(SKMainWindowController *)controller pdfView] applyPaddingSettings:settings];
+            }
         }
     }];
 }

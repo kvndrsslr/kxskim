@@ -59,6 +59,7 @@ extern NSNotificationName const SKPDFViewSelectionChangedNotification;
 extern NSNotificationName const SKPDFViewMagnificationChangedNotification;
 extern NSNotificationName const SKPDFViewPacerStartedOrStoppedNotification;
 extern NSNotificationName const SKPDFViewCanSelectNoteDidChangeNotification;
+extern NSNotificationName const SKPDFViewPaddingChangedNotification;
 
 extern NSString * const SKPDFViewAnnotationKey;
 extern NSString * const SKPDFViewPageKey;
@@ -168,6 +169,10 @@ enum {
     
     _Atomic(BOOL) drawsActiveSelection;
     
+    NSEdgeInsets pdfViewPadding;
+    CGFloat pageGap;
+    NSEdgeInsets pageBreakMarginValues;
+    
     BOOL hideNotes;
     BOOL wantsNewUndoGroup;
     BOOL zooming;
@@ -193,6 +198,8 @@ enum {
 @property (nonatomic, nullable, strong) SKTypeSelectHelper *typeSelectHelper;
 
 @property (nonatomic) BOOL needsRewind;
+@property (nonatomic) NSEdgeInsets pdfViewPadding;
+@property (nonatomic) CGFloat pageGap;
 
 - (void)toggleReadingBar;
 
@@ -217,6 +224,7 @@ enum {
 
 @property (nonatomic, copy) NSDictionary<NSString *, id> *displaySettings;
 - (void)setDisplaySettingsAndRewind:(NSDictionary<NSString *, id> *)settings;
+- (void)applyPaddingSettings:(NSDictionary<NSString *, id> *)settings;
 
 - (void)addAnnotationsForSelections:(nullable id)sender;
 - (void)addAnnotationWithType:(SKNoteType)annotationType;

@@ -16,10 +16,10 @@
         <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="240" width="309" height="217"/>
+            <rect key="contentRect" x="196" y="240" width="309" height="308"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="775"/>
             <view key="contentView" autoresizesSubviews="NO" wantsLayer="YES" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="308" height="289"/>
+                <rect key="frame" x="0.0" y="0.0" width="308" height="380"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <button horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8cW-DD-wHC">
@@ -215,6 +215,149 @@ Gw
                             <binding destination="-2" name="value" keyPath="displaysRTL" id="F2J-bL-KQM"/>
                         </connections>
                     </button>
+                    <textField horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Pad-LB-001">
+                        <rect key="frame" x="18" y="109" width="58" height="16"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="58" id="Pad-WC-001"/>
+                        </constraints>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="Padding:" id="Pad-CE-001">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Top-LB-002">
+                        <rect key="frame" x="84" y="109" width="52" height="16"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="52" id="Top-WC-002"/>
+                        </constraints>
+                        <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="Top:" id="Top-CE-002">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Pdt-FD-003">
+                        <rect key="frame" x="144" y="106" width="36" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="36" id="Pdt-WC-003"/>
+                        </constraints>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Pdt-CE-003">
+                            <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" formatWidth="-1" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="Pdt-FM-003"/>
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="custom" id="Pdt-BE-003"/>
+                            <binding destination="-2" name="value" keyPath="paddingTop" id="Pdt-BV-003"/>
+                        </connections>
+                    </textField>
+                    <textField horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Lft-LB-004">
+                        <rect key="frame" x="188" y="109" width="52" height="16"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="52" id="Lft-WC-004"/>
+                        </constraints>
+                        <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="Left:" id="Lft-CE-004">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Plf-FD-005">
+                        <rect key="frame" x="248" y="106" width="36" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="36" id="Plf-WC-005"/>
+                        </constraints>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Plf-CE-005">
+                            <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" formatWidth="-1" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="Plf-FM-005"/>
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="custom" id="Plf-BE-005"/>
+                            <binding destination="-2" name="value" keyPath="paddingLeft" id="Plf-BV-005"/>
+                        </connections>
+                    </textField>
+                    <textField horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Btm-LB-006">
+                        <rect key="frame" x="84" y="80" width="52" height="16"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="52" id="Btm-WC-006"/>
+                        </constraints>
+                        <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="Bottom:" id="Btm-CE-006">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Pbt-FD-007">
+                        <rect key="frame" x="144" y="77" width="36" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="36" id="Pbt-WC-007"/>
+                        </constraints>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Pbt-CE-007">
+                            <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" formatWidth="-1" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="Pbt-FM-007"/>
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="custom" id="Pbt-BE-007"/>
+                            <binding destination="-2" name="value" keyPath="paddingBottom" id="Pbt-BV-007"/>
+                        </connections>
+                    </textField>
+                    <textField horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Rgt-LB-008">
+                        <rect key="frame" x="188" y="80" width="52" height="16"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="52" id="Rgt-WC-008"/>
+                        </constraints>
+                        <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="Right:" id="Rgt-CE-008">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Prt-FD-009">
+                        <rect key="frame" x="248" y="77" width="36" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="36" id="Prt-WC-009"/>
+                        </constraints>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Prt-CE-009">
+                            <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" formatWidth="-1" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="Prt-FM-009"/>
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="custom" id="Prt-BE-009"/>
+                            <binding destination="-2" name="value" keyPath="paddingRight" id="Prt-BV-009"/>
+                        </connections>
+                    </textField>
+                    <textField horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Pgp-LB-010">
+                        <rect key="frame" x="18" y="39" width="66" height="16"/>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="Page gap:" id="Pgp-CE-010">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Pgg-FD-011">
+                        <rect key="frame" x="92" y="36" width="36" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="36" id="Pgg-WC-011"/>
+                        </constraints>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Pgg-CE-011">
+                            <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" formatWidth="-1" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="Pgg-FM-011"/>
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="custom" id="Pgg-BE-011"/>
+                            <binding destination="-2" name="value" keyPath="pageGap" id="Pgg-BV-011"/>
+                        </connections>
+                    </textField>
                 </subviews>
                 <constraints>
                     <constraint firstItem="RaB-j3-S3B" firstAttribute="firstBaseline" secondItem="Jh7-f6-LtY" secondAttribute="firstBaseline" id="27L-qf-fg8"/>
@@ -231,6 +374,31 @@ Gw
                     <constraint firstItem="7lV-o8-w8w" firstAttribute="firstBaseline" secondItem="jK7-jB-zxl" secondAttribute="firstBaseline" id="KFe-CV-w8P"/>
                     <constraint firstItem="oIO-AP-hzR" firstAttribute="leading" secondItem="dpy-5S-Zp3" secondAttribute="trailing" constant="12" symbolic="YES" id="KFh-3H-zJV"/>
                     <constraint firstAttribute="trailing" secondItem="ZR7-HY-PNO" secondAttribute="trailing" priority="501" constant="20" symbolic="YES" id="O96-OM-7ek"/>
+                    <constraint firstItem="Pbt-FD-007" firstAttribute="top" secondItem="Pdt-FD-003" secondAttribute="bottom" constant="8" symbolic="YES" id="Pad-CN-001"/>
+                    <constraint firstItem="Pgg-FD-011" firstAttribute="top" secondItem="Pbt-FD-007" secondAttribute="bottom" constant="20" symbolic="YES" id="Pad-CN-002"/>
+                    <constraint firstItem="oIO-AP-hzR" firstAttribute="top" secondItem="Pgg-FD-011" secondAttribute="bottom" constant="20" symbolic="YES" id="Pad-CN-003"/>
+                    <constraint firstItem="Pad-LB-001" firstAttribute="leading" secondItem="8cW-DD-wHC" secondAttribute="leading" id="Pad-CN-004"/>
+                    <constraint firstItem="Top-LB-002" firstAttribute="leading" secondItem="Pad-LB-001" secondAttribute="trailing" constant="8" symbolic="YES" id="Pad-CN-005"/>
+                    <constraint firstItem="Pdt-FD-003" firstAttribute="leading" secondItem="Top-LB-002" secondAttribute="trailing" constant="8" symbolic="YES" id="Pad-CN-006"/>
+                    <constraint firstItem="Lft-LB-004" firstAttribute="leading" secondItem="Pdt-FD-003" secondAttribute="trailing" constant="8" symbolic="YES" id="Pad-CN-007"/>
+                    <constraint firstItem="Plf-FD-005" firstAttribute="leading" secondItem="Lft-LB-004" secondAttribute="trailing" constant="8" symbolic="YES" id="Pad-CN-008"/>
+                    <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Plf-FD-005" secondAttribute="trailing" constant="20" symbolic="YES" id="Pad-CN-009"/>
+                    <constraint firstItem="Btm-LB-006" firstAttribute="leading" secondItem="Top-LB-002" secondAttribute="leading" id="Pad-CN-010"/>
+                    <constraint firstItem="Pbt-FD-007" firstAttribute="leading" secondItem="Pdt-FD-003" secondAttribute="leading" id="Pad-CN-011"/>
+                    <constraint firstItem="Rgt-LB-008" firstAttribute="leading" secondItem="Lft-LB-004" secondAttribute="leading" id="Pad-CN-012"/>
+                    <constraint firstItem="Prt-FD-009" firstAttribute="leading" secondItem="Plf-FD-005" secondAttribute="leading" id="Pad-CN-013"/>
+                    <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Prt-FD-009" secondAttribute="trailing" constant="20" symbolic="YES" id="Pad-CN-014"/>
+                    <constraint firstItem="Pgp-LB-010" firstAttribute="leading" secondItem="8cW-DD-wHC" secondAttribute="leading" id="Pad-CN-015"/>
+                    <constraint firstItem="Pgg-FD-011" firstAttribute="leading" secondItem="Pgp-LB-010" secondAttribute="trailing" constant="8" symbolic="YES" id="Pad-CN-016"/>
+                    <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Pgg-FD-011" secondAttribute="trailing" constant="20" symbolic="YES" id="Pad-CN-017"/>
+                    <constraint firstItem="Pad-LB-001" firstAttribute="firstBaseline" secondItem="Pdt-FD-003" secondAttribute="firstBaseline" id="Pad-CN-018"/>
+                    <constraint firstItem="Top-LB-002" firstAttribute="firstBaseline" secondItem="Pdt-FD-003" secondAttribute="firstBaseline" id="Pad-CN-019"/>
+                    <constraint firstItem="Lft-LB-004" firstAttribute="firstBaseline" secondItem="Pdt-FD-003" secondAttribute="firstBaseline" id="Pad-CN-020"/>
+                    <constraint firstItem="Btm-LB-006" firstAttribute="firstBaseline" secondItem="Pbt-FD-007" secondAttribute="firstBaseline" id="Pad-CN-021"/>
+                    <constraint firstItem="Rgt-LB-008" firstAttribute="firstBaseline" secondItem="Pbt-FD-007" secondAttribute="firstBaseline" id="Pad-CN-022"/>
+                    <constraint firstItem="Pgp-LB-010" firstAttribute="firstBaseline" secondItem="Pgg-FD-011" secondAttribute="firstBaseline" id="Pad-CN-023"/>
+                    <constraint firstItem="Plf-FD-005" firstAttribute="firstBaseline" secondItem="Pdt-FD-003" secondAttribute="firstBaseline" id="Pad-CN-024"/>
+                    <constraint firstItem="Prt-FD-009" firstAttribute="firstBaseline" secondItem="Pbt-FD-007" secondAttribute="firstBaseline" id="Pad-CN-025"/>
                     <constraint firstItem="dpy-5S-Zp3" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" symbolic="YES" id="Oth-CA-iVV"/>
                     <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="8cW-DD-wHC" secondAttribute="trailing" constant="20" symbolic="YES" id="Q8h-wE-hro"/>
                     <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="RaB-j3-S3B" secondAttribute="trailing" constant="20" symbolic="YES" id="UK4-Wp-Her"/>
@@ -250,7 +418,7 @@ Gw
                     <constraint firstItem="VYe-Nl-QHJ" firstAttribute="leading" secondItem="8cW-DD-wHC" secondAttribute="leading" id="jS7-tr-bI9"/>
                     <constraint firstItem="V7T-S1-Td4" firstAttribute="firstBaseline" secondItem="4tx-Im-k2d" secondAttribute="firstBaseline" id="ohk-Ys-QqW"/>
                     <constraint firstItem="oIO-AP-hzR" firstAttribute="width" secondItem="dpy-5S-Zp3" secondAttribute="width" id="pUV-GC-yn2"/>
-                    <constraint firstItem="oIO-AP-hzR" firstAttribute="top" secondItem="WFv-vV-yVb" secondAttribute="bottom" constant="20" id="uqe-7V-4sf"/>
+                    <constraint firstItem="Pdt-FD-003" firstAttribute="top" secondItem="WFv-vV-yVb" secondAttribute="bottom" constant="20" id="uqe-7V-4sf"/>
                     <constraint firstItem="4tx-Im-k2d" firstAttribute="top" secondItem="EiT-Mj-1SZ" secondAttribute="top" constant="20" symbolic="YES" id="vAg-87-diM"/>
                     <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="4tx-Im-k2d" secondAttribute="trailing" constant="20" symbolic="YES" id="vVR-K5-slg"/>
                     <constraint firstItem="D1r-q4-3vf" firstAttribute="leading" secondItem="8cW-DD-wHC" secondAttribute="leading" id="wah-xQ-Fyk"/>

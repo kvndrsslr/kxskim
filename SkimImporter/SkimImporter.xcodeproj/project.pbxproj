@@ -401,7 +401,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${BUILD_STYLE}\" = \"Debug\" -o \"${CONFIGURATION}\" = \"Debug\" ]; then\nexit 0\nfi\n\necho \"*** stripping header files from frameworks ***\"\nfind \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\" -type file -name \"*.h\" -delete\nfind \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\" \\( -type d -or -type l \\) -name Headers -delete\n";
+			shellScript = "if [ \"${BUILD_STYLE}\" = \"Debug\" -o \"${CONFIGURATION}\" = \"Debug\" ]; then\nexit 0\nfi\n\necho \"*** stripping header files from frameworks ***\"\nfind \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\" -type file -name \"*.h\" -delete\nfind \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\" \\( -type d -or -type l \\) -name Headers -delete\n\necho \"*** re-signing frameworks whose headers were just removed ***\"\n# Those frameworks were signed when they were copied in (Code Sign On Copy), so\n# removing their headers invalidated those signatures. Sign them again here,\n# deepest first, so the built bundle verifies without a manual codesign_skim.sh run.\nif [ \"${CODE_SIGNING_ALLOWED}\" != \"NO\" ]; then\nSIGN_IDENTITY=\"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY:--}}\"\nCODESIGN_TIMESTAMP=\n[ \"${SIGN_IDENTITY}\" = \"-\" ] || CODESIGN_TIMESTAMP=--timestamp\nfind \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\" -type d -name \"*.framework\" | sort -r | while read -r FRAMEWORK; do\necho \"*** re-signing ${FRAMEWORK} ***\"\ncodesign --force --sign \"${SIGN_IDENTITY}\" ${CODESIGN_TIMESTAMP} --preserve-metadata=entitlements,flags,runtime \"${FRAMEWORK}\" || exit 1\ndone || exit 1\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

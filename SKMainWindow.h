@@ -58,11 +58,15 @@ typedef NS_ENUM(NSInteger, SKAutoWindowTitleVisibility) {
 
 @interface SKMainWindow : SKWindow {
     BOOL disableConstrainedFrame;
+    BOOL autoHidesTitleBar;
+    BOOL titleBarHovered;
 }
 
 @property (nullable, weak) id<SKMainWindowDelegate> delegate;
 
 @property (nonatomic) SKAutoWindowTitleVisibility autoTitleVisibility;;
+
+@property (nonatomic) BOOL autoHidesTitleBar;
 
 - (void)setFrameWithoutConstrain:(NSRect)frameRect;
 

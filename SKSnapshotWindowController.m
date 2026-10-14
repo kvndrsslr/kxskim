@@ -637,22 +637,11 @@ static void roundCornersAndApplyFiltersToImageRep(NSBitmapImageRep *imageRep, NS
         NSRect windowRect = [window frame];
         NSRect dockRect = [[self delegate] snapshotController:self miniaturizedRect:miniaturize];
         dockRect = [self miniaturizedRectForDockingRect:dockRect];
-        BOOL canUseCGWindowAPI = miniaturize;
-        
-        if (@available(macOS 14.0, *))
-            canUseCGWindowAPI = NO;
-        
-        if (canUseCGWindowAPI) {
-            CGImageRef cgImage = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, (CGWindowID)[window windowNumber], kCGWindowImageBoundsIgnoreFraming | kCGWindowImageBestResolution);
-            windowImage = [[NSImage alloc] initWithCGImage:cgImage size:windowRect.size];
-            CGImageRelease(cgImage);
-        } else {
-            windowImage = [[NSImage alloc] initWithSize:windowRect.size];
-            NSBitmapImageRep *imageRep = [[[window contentView] superview] bitmapImageRepCachingDisplay];
-            if (imageRep) {
-                roundCornersAndApplyFiltersToImageRep(imageRep, filters, [window contentLayoutRect]);
-                [windowImage addRepresentation:imageRep];
-            }
+        windowImage = [[NSImage alloc] initWithSize:windowRect.size];
+        NSBitmapImageRep *imageRep = [[[window contentView] superview] bitmapImageRepCachingDisplay];
+        if (imageRep) {
+            roundCornersAndApplyFiltersToImageRep(imageRep, filters, [window contentLayoutRect]);
+            [windowImage addRepresentation:imageRep];
         }
         
         SKAnimatedBorderlessWindow *miniaturizeWindow = [[SKAnimatedBorderlessWindow alloc] initWithContentRect:miniaturize ? windowRect : dockRect];

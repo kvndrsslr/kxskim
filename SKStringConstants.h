@@ -110,6 +110,7 @@ extern NSString * const SKSwatchColorsKey;
 extern NSString * const SKDefaultPDFDisplaySettingsKey;
 extern NSString * const SKDefaultFullScreenPDFDisplaySettingsKey;
 extern NSString * const SKUseSettingsFromPDFKey;
+extern NSString * const SKHideWindowTitleBarKey;
 extern NSString * const SKShowStatusBarKey;
 extern NSString * const SKShowBookmarkStatusBarKey;
 extern NSString * const SKShowNotesStatusBarKey;

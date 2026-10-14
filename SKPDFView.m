@@ -64,6 +64,7 @@
 #import "NSMenu_SKExtensions.h"
 #import "NSGraphics_SKExtensions.h"
 #import "NSView_SKExtensions.h"
+#import "NSColor_SKExtensions.h"
 #import "NSPointerArray_SKExtensions.h"
 #import "NSScroller_SKExtensions.h"
 #import "SKColorMenuView.h"
@@ -116,6 +117,7 @@ NSNotificationName const SKPDFViewSelectionChangedNotification = @"SKPDFViewSele
 NSNotificationName const SKPDFViewMagnificationChangedNotification = @"SKPDFViewMagnificationChangedNotification";
 NSNotificationName const SKPDFViewPacerStartedOrStoppedNotification = @"SKPDFViewPacerStartedOrStoppedNotification";
 NSNotificationName const SKPDFViewCanSelectNoteDidChangeNotification = @"SKPDFViewCanSelectNoteDidChangeNotification";
+NSNotificationName const SKPDFViewPaddingChangedNotification = @"SKPDFViewPaddingChangedNotification";
 
 NSString * const SKPDFViewAnnotationKey = @"annotation";
 NSString * const SKPDFViewPageKey = @"page";
@@ -136,6 +138,11 @@ NSString * const SKPDFViewPageKey = @"page";
 #define DISPLAYDIRECTION_KEY        @"displayDirection"
 #define DISPLAYSRTL_KEY             @"displaysRTL"
 #define DISPLAYBOX_KEY              @"displayBox"
+#define PADDINGTOP_KEY              @"paddingTop"
+#define PADDINGLEFT_KEY             @"paddingLeft"
+#define PADDINGBOTTOM_KEY           @"paddingBottom"
+#define PADDINGRIGHT_KEY            @"paddingRight"
+#define PAGEGAP_KEY                 @"pageGap"
 
 static char SKPDFViewDefaultsObservationContext;
 
@@ -147,6 +154,19 @@ static BOOL useToolModeCursors = NO;
 static inline PDFAreaOfInterest SKAreaOfInterestForResizeHandle(SKRectEdges mask, PDFPage *page);
 
 static inline NSSize SKFitTextNoteSize(NSString *string, NSFont *font, CGFloat width);
+
+static inline NSEdgeInsets SKPaddingFromSettings(NSDictionary *settings, NSEdgeInsets padding) {
+    NSNumber *number;
+    if ((number = [settings objectForKey:PADDINGTOP_KEY]))
+        padding.top = fmax([number doubleValue], 0.0);
+    if ((number = [settings objectForKey:PADDINGLEFT_KEY]))
+        padding.left = fmax([number doubleValue], 0.0);
+    if ((number = [settings objectForKey:PADDINGBOTTOM_KEY]))
+        padding.bottom = fmax([number doubleValue], 0.0);
+    if ((number = [settings objectForKey:PADDINGRIGHT_KEY]))
+        padding.right = fmax([number doubleValue], 0.0);
+    return padding;
+}
 
 static NSString *SKTypeForNoteType(SKNoteType annotationType);
 
@@ -184,6 +204,136 @@ enum {
 
 #pragma mark -
 
+// a transient focus ring drawn around a destination after a jump, to draw the eye to the target;
+// modelled on SKSyncDot: a repeating timer drives a phase counter, the owner redraws the marker's
+// bounds on every tick and drops the marker on the final tick
+static const NSInteger SKFocusMarkerTicks = 16;
+
+@interface SKFocusMarker : NSObject {
+    NSRect rect;
+    NSRect bounds;
+    PDFPage *page;
+    __weak PDFView *view;
+    NSTimer *timer;
+    _Atomic(NSInteger) phase;
+    NSUInteger skipped;
+    void (^handler)(BOOL finished);
+}
+@property (nonatomic, readonly) NSRect rect;
+@property (nonatomic, readonly) PDFPage *page;
+@property (nonatomic, readonly) NSRect bounds;
+
+- (instancetype)initWithRect:(NSRect)aRect page:(PDFPage *)aPage view:(PDFView *)aView updateHandler:(void (^)(BOOL finished))aHandler;
+- (instancetype)init NS_UNAVAILABLE;
+
+- (void)invalidate;
+
+- (void)drawInContext:(CGContextRef)context lineWidth:(CGFloat)lineWidth;
+
+@end
+
+@implementation SKFocusMarker
+
+@synthesize rect, page, bounds;
+
+- (instancetype)initWithRect:(NSRect)aRect page:(PDFPage *)aPage view:(PDFView *)aView updateHandler:(void (^)(BOOL))aHandler {
+    self = [super init];
+    if (self) {
+        rect = aRect;
+        page = aPage;
+        view = aView;
+        phase = 0;
+        skipped = 0;
+        // the marker contracts from 150% to 100% of the target size, so invalidate the largest extent
+        bounds = NSInsetRect(SKRectFromCenterAndSize(NSMakePoint(NSMidX(rect), NSMidY(rect)), NSMakeSize(1.5 * NSWidth(rect), 1.5 * NSHeight(rect))), -3.0, -3.0);
+        __weak SKFocusMarker *weakSelf = self;
+        timer = [NSTimer scheduledTimerWithTimeInterval:0.05 repeats:YES block:^(NSTimer *t){ [weakSelf animate]; }];
+        handler = [aHandler copy];
+    }
+    return self;
+}
+
+- (void)dealloc {
+    [timer invalidate];
+}
+
+- (void)finish {
+    [timer invalidate];
+    timer = nil;
+    if (handler) {
+        handler(YES);
+        handler = nil;
+    }
+}
+
+- (void)animate {
+    // don't burn the animation while the target page is not displayed, e.g. during a slow relayout
+    if (page && view && [view isPageAtIndexDisplayed:[page pageIndex]] == NO) {
+        if (++skipped > 40)
+            [self finish];
+        return;
+    }
+    if (atomic_fetch_add(&phase, 1) + 1 >= SKFocusMarkerTicks) {
+        [self finish];
+        return;
+    }
+    if (handler)
+        handler(NO);
+}
+
+- (void)invalidate {
+    [timer invalidate];
+    timer = nil;
+    handler = nil;
+}
+
+- (void)drawInContext:(CGContextRef)context lineWidth:(CGFloat)lineWidth {
+    NSInteger aPhase = atomic_load(&phase);
+    if (aPhase >= SKFocusMarkerTicks)
+        return;
+    CGFloat progress = (CGFloat)aPhase / (CGFloat)SKFocusMarkerTicks;
+    CGFloat alpha, scale;
+    if (progress < 1.0 / 3.0) {
+        // contract from 150% to 100% while fading in
+        CGFloat t = 3.0 * progress;
+        alpha = 0.6 * t;
+        scale = 1.5 - 0.5 * t;
+    } else if (progress < 0.5) {
+        alpha = 0.6;
+        scale = 1.0;
+    } else {
+        // fade out over the last half
+        alpha = 0.6 * (1.0 - 2.0 * (progress - 0.5));
+        scale = 1.0;
+    }
+    NSRect r = SKRectFromCenterAndSize(NSMakePoint(NSMidX(rect), NSMidY(rect)), NSMakeSize(scale * NSWidth(rect), scale * NSHeight(rect)));
+    NSColor *color = [[NSColor selectionHighlightColor:YES] colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
+    if (color == nil)
+        color = [NSColor controlAccentColor];
+    CGFloat red = 0.0, green = 0.0, blue = 1.0, baseAlpha = 1.0;
+    [color getRed:&red green:&green blue:&blue alpha:&baseAlpha];
+    CGFloat radius = MIN(4.0, 0.5 * MIN(NSWidth(r), NSHeight(r)));
+    CGPathRef path = CGPathCreateWithRoundedRect(NSRectToCGRect(r), radius, radius, NULL);
+    CGColorRef fillColor = CGColorCreateGenericRGB(red, green, blue, baseAlpha * alpha * 0.15);
+    CGColorRef strokeColor = CGColorCreateGenericRGB(red, green, blue, baseAlpha * alpha);
+    CGContextSaveGState(context);
+    CGContextAddPath(context, path);
+    CGContextSetFillColorWithColor(context, fillColor);
+    CGContextFillPath(context);
+    CGContextAddPath(context, path);
+    CGContextSetStrokeColorWithColor(context, strokeColor);
+    CGContextSetLineWidth(context, lineWidth);
+    CGContextStrokePath(context);
+    CGContextRestoreGState(context);
+    CGPathRelease(path);
+    CGColorRelease(fillColor);
+    CGColorRelease(strokeColor);
+}
+
+@end
+
+#pragma mark -
+
 @interface PDFView (SKPrivateDeclarations)
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard types:(NSArray *)types;
 - (void)enableSwipeGestures:(BOOL)flag;
@@ -193,6 +343,10 @@ enum {
 
 @property (strong) SKReadingBar *readingBar;
 @property (strong) SKSyncDot *syncDot;
+@property (strong) SKFocusMarker *focusMarker;
+
+- (void)showFocusMarkerForDestination:(PDFDestination *)destination;
+- (void)clearFocusMarker;
 
 - (void)editTextNoteWithEvent:(NSEvent *)theEvent;
 - (BOOL)isEditingAnnotation:(PDFAnnotation *)annotation;
@@ -249,7 +403,7 @@ enum {
 
 @implementation SKPDFView
 
-@synthesize toolMode, annotationMode, temporaryToolMode, currentAnnotation, readingBar, pacerSpeed, typeSelectHelper, syncDot, hideNotes, zooming;
+@synthesize toolMode, annotationMode, temporaryToolMode, currentAnnotation, readingBar, pacerSpeed, typeSelectHelper, syncDot, focusMarker, hideNotes, zooming;
 @dynamic extendedDisplayMode, displaySettings, canAddNotes, canSelectNote, hasReadingBar, hasPacer, selectToolPage, selectToolRect, magnifyToolMagnification, needsRewind, editing, delegate;
 
 + (void)initialize {
@@ -304,6 +458,15 @@ enum {
     gestureRotation = 0.0;
     gesturePageIndex = NSNotFound;
     
+    // start from the registered defaults, so documents whose saved setup predates these settings get the configured values
+    NSDictionary *displaySettings = [[NSUserDefaults standardUserDefaults] dictionaryForKey:SKDefaultPDFDisplaySettingsKey];
+    pdfViewPadding = SKPaddingFromSettings(displaySettings, NSEdgeInsetsZero);
+    NSNumber *number = [displaySettings objectForKey:PAGEGAP_KEY];
+    pageGap = number ? fmax([number doubleValue], 0.0) : 0.0;
+    // PDFKit starts with nonzero margins, so force the first application
+    pageBreakMarginValues = NSEdgeInsetsMake(-1.0, -1.0, -1.0, -1.0);
+    [self updatePageBreakMargins];
+    
     NSTrackingAreaOptions options = NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited;
     for (NSTrackingArea *area in [self trackingAreas]) {
         if (([area options] & NSTrackingInVisibleRect))
@@ -356,6 +519,7 @@ enum {
     [self removePDFToolTipRects];
     [syncDot invalidate];
     syncDot = nil;
+    [self clearFocusMarker];
     [self stopPacer];
     [self removeLoupeWindow];
 }
@@ -463,8 +627,11 @@ enum {
     SKSyncDot *aSyncDot = [self syncDot];
     if ([[aSyncDot page] isEqual:pdfPage] == NO)
         aSyncDot = nil;
+    SKFocusMarker *aFocusMarker = [self focusMarker];
+    if ([[aFocusMarker page] isEqual:pdfPage] == NO)
+        aFocusMarker = nil;
     
-    if (annotation == nil && pageIndex == NSNotFound && aReadingBar == nil && aSyncDot == nil)
+    if (annotation == nil && pageIndex == NSNotFound && aReadingBar == nil && aSyncDot == nil && aFocusMarker == nil)
         return;
     
     CGContextSaveGState(context);
@@ -480,6 +647,8 @@ enum {
         [self drawSelectionRect:rect atIndex:pageIndex forPage:pdfPage inContext:context];
     
     [aSyncDot drawInContext:context];
+    
+    [aFocusMarker drawInContext:context lineWidth:2.0 / fmax([self scaleFactor], 0.01)];
     
     CGContextRestoreGState(context);
 }
@@ -557,6 +726,66 @@ enum {
     highlightLayerController = nil;
 }
 
+#pragma mark Destination focus
+
+- (void)goToDestination:(PDFDestination *)destination {
+    [super goToDestination:destination];
+    // gate on the RAW destination point, before effectiveDestinationForView: resolves it: that method
+    // substitutes a real page corner for an unspecified coordinate (Fit/FitB/FitBH/FitBV/XYZ), which would
+    // ring a corner the caller never named; a half-specified point is rejected too because the line lookup
+    // needs a sane x
+    PDFPage *page = [destination page];
+    NSPoint point = [destination point];
+    if (page != nil && point.x < kPDFDestinationUnspecifiedValue && point.y < kPDFDestinationUnspecifiedValue)
+        [self showFocusMarkerForDestination:[destination effectiveDestinationForView:self]];
+}
+
+- (void)showFocusMarkerForDestination:(PDFDestination *)destination {
+    // keep document-open/restore and off-screen jumps silent
+    if ([[self window] isVisible] == NO)
+        return;
+    if ([NSView shouldShowFadeAnimation] == NO || [NSView shouldShowSlideAnimation] == NO)
+        return;
+    PDFPage *page = [destination page];
+    NSPoint point = [destination point];
+    if (page == nil || NSEqualPoints(point, SKUnspecifiedPoint))
+        return;
+    
+    NSRect rect = NSZeroRect;
+    NSPointerArray *lineRects = [page lineRects];
+    // a destination point is the top-left of the target line; indexOfLineRectAtPoint:lower:NO returns
+    // that line (lower:YES returns the line above it, contrary to what its name suggests)
+    NSInteger line = [page indexOfLineRectAtPoint:point lower:NO];
+    if (line >= 0 && (NSUInteger)line < [lineRects count])
+        rect = [lineRects rectAtIndex:(NSUInteger)line];
+    if (NSIsEmptyRect(rect))
+        rect = SKRectFromCenterAndSquareSize(point, 10.0);
+    // inflate so the ring surrounds the target line/point
+    rect = NSInsetRect(rect, -2.0, -2.0);
+    if (NSIsEmptyRect(rect))
+        return;
+    
+    [focusMarker invalidate];
+    __weak __typeof__(self) weakSelf = self;
+    [self setFocusMarker:[[SKFocusMarker alloc] initWithRect:rect page:page view:self updateHandler:^(BOOL finished){
+            if (finished) {
+                [weakSelf clearFocusMarker];
+            } else {
+                [weakSelf setNeedsDisplayInRect:[[weakSelf focusMarker] bounds] ofPage:[[weakSelf focusMarker] page]];
+            }
+        }]];
+    [self setNeedsDisplayInRect:[focusMarker bounds] ofPage:page];
+}
+
+- (void)clearFocusMarker {
+    SKFocusMarker *marker = focusMarker;
+    if (marker == nil)
+        return;
+    [self setFocusMarker:nil];
+    [self setNeedsDisplayInRect:[marker bounds] ofPage:[marker page]];
+    [marker invalidate];
+}
+
 #pragma mark Accessors
 
 - (void)setDocument:(PDFDocument *)document {
@@ -565,6 +794,7 @@ enum {
     BOOL shouldHideReadingBar = [syncDot shouldHideReadingBar];
     [syncDot invalidate];
     [self setSyncDot:nil];
+    [self clearFocusMarker];
     
     @synchronized (self) {
         selectionRect = NSZeroRect;
@@ -732,9 +962,17 @@ enum {
     }
 }
 
+- (void)setDisplayMode:(PDFDisplayMode)displayMode {
+    if (displayMode != [self displayMode]) {
+        [super setDisplayMode:displayMode];
+        [self updatePageBreakMargins];
+    }
+}
+
 - (void)setDisplayDirection:(PDFDisplayDirection)displayDirection {
     if (displayDirection != [self displayDirection]) {
         [super setDisplayDirection:displayDirection];
+        [self updatePageBreakMargins];
         [[NSNotificationCenter defaultCenter] postNotificationName:SKPDFViewDisplayDirectionChangedNotification object:self];
     }
 }
@@ -882,6 +1120,64 @@ enum {
     return [self canAddNotes] && IS_TEXT_OR_NOTE_TOOL;
 }
 
+- (NSEdgeInsets)pdfViewPadding {
+    return pdfViewPadding;
+}
+
+- (void)setPdfViewPadding:(NSEdgeInsets)padding {
+    padding.top = fmax(padding.top, 0.0);
+    padding.left = fmax(padding.left, 0.0);
+    padding.bottom = fmax(padding.bottom, 0.0);
+    padding.right = fmax(padding.right, 0.0);
+    if (NSEdgeInsetsEqual(padding, pdfViewPadding))
+        return;
+    pdfViewPadding = padding;
+    [[NSNotificationCenter defaultCenter] postNotificationName:SKPDFViewPaddingChangedNotification object:self];
+}
+
+- (CGFloat)pageGap {
+    return pageGap;
+}
+
+- (void)setPageGap:(CGFloat)gap {
+    gap = fmax(gap, 0.0);
+    if (gap == pageGap)
+        return;
+    pageGap = gap;
+    [self updatePageBreakMargins];
+}
+
+// PDFKit applies pageBreakMargins around every page, so we only inset along the axes along which pages repeat,
+// which keeps the fitted axis flush with the pane; the gap is split between the neighbouring pages
+- (void)updatePageBreakMargins {
+    CGFloat gap = pageGap;
+    NSEdgeInsets margins = NSEdgeInsetsZero;
+    if (gap > 0.0) {
+        switch ([self extendedDisplayMode]) {
+            case kPDFDisplaySinglePageContinuous:
+                margins = NSEdgeInsetsMake(0.5 * gap, 0.0, 0.5 * gap, 0.0);
+                break;
+            case kPDFDisplayHorizontalContinuous:
+            case kPDFDisplayTwoUp:
+                margins = NSEdgeInsetsMake(0.0, 0.5 * gap, 0.0, 0.5 * gap);
+                break;
+            case kPDFDisplayTwoUpContinuous:
+                margins = NSEdgeInsetsMake(0.5 * gap, 0.5 * gap, 0.5 * gap, 0.5 * gap);
+                break;
+            default:
+                break;
+        }
+    }
+    // PDFKit ignores and reports zero margins when page breaks are not displayed, so keep track of what we applied
+    if (NSEdgeInsetsEqual(margins, pageBreakMarginValues))
+        return;
+    pageBreakMarginValues = margins;
+    [self setPageBreakMargins:margins];
+    // PDFKit does not relayout on a pageBreakMargins change
+    if ([self document])
+        [self layoutDocumentView];
+}
+
 - (NSDictionary *)displaySettings {
     return @{DISPLAYSPAGEBREAKS_KEY: [NSNumber numberWithBool:[self displaysPageBreaks]],
             DISPLAYSASBOOK_KEY:      [NSNumber numberWithBool:[self displaysAsBook]],
@@ -890,11 +1186,24 @@ enum {
             AUTOSCALES_KEY:          [NSNumber numberWithBool:[self autoScales]],
             DISPLAYMODE_KEY:         [NSNumber numberWithInteger:[self displayMode]],
             DISPLAYDIRECTION_KEY:    [NSNumber numberWithInteger:[self displayDirection]],
-            DISPLAYSRTL_KEY:         [NSNumber numberWithBool:[self displaysRTL]]};
+            DISPLAYSRTL_KEY:         [NSNumber numberWithBool:[self displaysRTL]],
+            PADDINGTOP_KEY:          [NSNumber numberWithDouble:pdfViewPadding.top],
+            PADDINGLEFT_KEY:         [NSNumber numberWithDouble:pdfViewPadding.left],
+            PADDINGBOTTOM_KEY:       [NSNumber numberWithDouble:pdfViewPadding.bottom],
+            PADDINGRIGHT_KEY:        [NSNumber numberWithDouble:pdfViewPadding.right],
+            PAGEGAP_KEY:             [NSNumber numberWithDouble:pageGap]};
+}
+
+- (void)applyPaddingSettings:(NSDictionary *)settings {
+    NSNumber *number = [settings objectForKey:PAGEGAP_KEY];
+    if (number)
+        [self setPageGap:[number doubleValue]];
+    [self setPdfViewPadding:SKPaddingFromSettings(settings, pdfViewPadding)];
 }
 
 - (void)setDisplaySettings:(NSDictionary *)setup {
     NSNumber *number;
+    [self applyPaddingSettings:setup];
     if ((number = [setup objectForKey:AUTOSCALES_KEY]))
         [self setAutoScales:[number boolValue]];
     if ([self autoScales] == NO && (number = [setup objectForKey:SCALEFACTOR_KEY]))
@@ -1528,13 +1837,14 @@ enum {
         NSClipView *clipView = [scrollView contentView];
         NSRect bounds = [clipView bounds];
         CGFloat inset = [clipView contentInsets].top;
+        CGFloat leadingInset = [clipView contentInsets].left;
         CGFloat margin = 0.0;
         NSRect docRect = [[scrollView documentView] frame];
         NSRect pageRect = [self convertRect:[self convertRect:[rewindPage boundsForBox:[self displayBox]] fromPage:rewindPage] toView:clipView];
         if ((mode & (kPDFDisplayHorizontalContinuous | kPDFDisplayTwoUp)) && NSWidth(docRect) > NSWidth(bounds)) {
             if ([self displaysPageBreaks])
                 margin = [self pageBreakMargins].left;
-            bounds.origin.x = fmin(fmax(fmin(NSMidX(pageRect) - 0.5 * NSWidth(bounds), NSMinX(pageRect) - margin), NSMinX(docRect)), NSMaxX(docRect) - NSWidth(bounds));
+            bounds.origin.x = fmin(fmax(fmin(NSMidX(pageRect) - 0.5 * NSWidth(bounds), NSMinX(pageRect) - margin - leadingInset), NSMinX(docRect) - leadingInset), NSMaxX(docRect) - NSWidth(bounds));
         }
         if ((mode & kPDFDisplaySinglePageContinuous) && NSHeight(docRect) > NSHeight(bounds) - inset) {
             if ([self displaysPageBreaks])

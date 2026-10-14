@@ -51,6 +51,11 @@ NS_ASSUME_NONNULL_BEGIN
     BOOL displaysRTL;
     BOOL displaysPageBreaks;
     NSInteger displayBox;
+    CGFloat paddingTop;
+    CGFloat paddingLeft;
+    CGFloat paddingBottom;
+    CGFloat paddingRight;
+    CGFloat pageGap;
     NSDictionary<NSString *, id> *defaultSettings;
 }
 
@@ -67,6 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSInteger displayMode, displayDirection, extendedDisplayMode;
 @property (nonatomic) BOOL displaysAsBook, displaysRTL, displaysPageBreaks;
 @property (nonatomic) NSInteger displayBox;
+@property (nonatomic) CGFloat paddingTop, paddingLeft, paddingBottom, paddingRight, pageGap;
 
 @property (nonatomic, copy) NSDictionary<NSString *, id> *settings;
 

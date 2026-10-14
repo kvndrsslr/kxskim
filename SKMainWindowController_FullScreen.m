@@ -123,7 +123,7 @@ static CGFloat fullScreenToolbarOffset = 0.0;
             [sideWindow makeFirstResponder:nil];
         if (mwcFlags.fullSizeContent) {
             [leftSideController.topBar setStyle:SKTopBarStyleSearchBar];
-            [leftSideController setTopInset:titleBarHeight];
+            [leftSideController setTopInset:[self titleBarInset]];
         } else {
             [leftSideController.topBar setDrawsBackground:YES];
         }
@@ -509,24 +509,32 @@ static CGFloat fullScreenToolbarOffset = 0.0;
     }
 }
 
+static NSImage *imageForWindow(NSWindow *window) {
+    NSView *view = [[window contentView] superview];
+    NSBitmapImageRep *imageRep = [view bitmapImageRepCachingDisplay];
+    if (imageRep == nil)
+        return nil;
+    NSImage *image = [[NSImage alloc] initWithSize:[view bounds].size];
+    [image addRepresentation:imageRep];
+    return image;
+}
+
 - (void)displayStaticContentInWindow:(NSWindow *)displayWindow ordered:(NSWindowOrderingMode)place {
     NSWindow *window = [self window];
     NSRect frame = [window frame];
     CALayer *layer = [CALayer layer];
-    CGImageRef cgImage = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, (CGWindowID)[window windowNumber], kCGWindowImageBoundsIgnoreFraming | kCGWindowImageBestResolution);
     [layer setMasksToBounds:YES];
     [layer setBounds:[[window contentView] bounds]];
     [layer setContentsScale:[window backingScaleFactor]];
-    [layer setContents:CFBridgingRelease(cgImage)];
+    [layer setContents:imageForWindow(window)];
     if (([window styleMask] & NSWindowStyleMaskFullScreen) != 0 && NSHeight([window frame]) > NSHeight([window contentLayoutRect])) {
         for (NSWindow *tbWindow in [window childWindows]) {
             if ([NSStringFromClass([tbWindow class]) containsString:@"Toolbar"]) {
-                CGImageRef tbCgImage = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, (CGWindowID)[tbWindow windowNumber], kCGWindowImageBoundsIgnoreFraming | kCGWindowImageBestResolution);
                 CALayer *tbLayer = [CALayer layer];
                 [tbLayer setMasksToBounds:YES];
                 [tbLayer setFrame:[window convertRectFromScreen:[tbWindow frame]]];
                 [tbLayer setContentsScale:[window backingScaleFactor]];
-                [tbLayer setContents:CFBridgingRelease(tbCgImage)];
+                [tbLayer setContents:imageForWindow(tbWindow)];
                 [layer addSublayer:tbLayer];
                 break;
             }

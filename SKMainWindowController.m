@@ -204,6 +204,12 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
 
 - (void)updateTableFont;
 
+- (void)applyTitleBarInsets;
+
+- (void)applyPDFViewPadding;
+
+- (void)applyPDFViewContentInsets;
+
 - (void)updatePageLabel;
 
 - (void)registerForDocumentNotifications;
@@ -237,6 +243,7 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
         
         memset(&mwcFlags, 0, sizeof(mwcFlags));
         mwcFlags.fullSizeContent = NO == [sud boolForKey:SKDisableSearchBarBlurringKey];
+        mwcFlags.hidesTitleBar = [sud boolForKey:SKHideWindowTitleBarKey];
         mwcFlags.caseInsensitiveSearch = [sud boolForKey:SKCaseInsensitiveSearchKey];
         mwcFlags.wholeWordSearch = [sud boolForKey:SKWholeWordSearchKey];
         mwcFlags.caseInsensitiveFilter = [sud boolForKey:SKCaseInsensitiveFilterKey];
@@ -423,18 +430,15 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
     }
     if ((placement & SKTBReplacingTitle))
         [(SKMainWindow *)window setAutoTitleVisibility:(placement & SKTBBesideTitle) ? SKWindowTitleHiddenForTabBar : SKWindowTitleHiddenForToolbar];
+    [(SKMainWindow *)window setAutoHidesTitleBar:[sud boolForKey:SKHideWindowTitleBarKey]];
     
     // for animations
     [[window contentView] setWantsLayer:YES];
     
     if (mwcFlags.fullSizeContent) {
         titleBarHeight = NSHeight([window frame]) - NSHeight([window contentLayoutRect]);
-        [leftSideController setTopInset:titleBarHeight];
-        [rightSideController setTopInset:titleBarHeight];
         // temporarily force the contentInsets we will get, otherwise initial layout will use zero insets
-        NSScrollView *scrollView = [pdfView embeddedScrollView];
-        [scrollView setAutomaticallyAdjustsContentInsets:NO];
-        [scrollView setContentInsets:NSEdgeInsetsMake(titleBarHeight, 0.0, 0.0, 0.0)];
+        [self applyTitleBarInsets];
     }
     
     [self setWindowFrameAutosaveNameOrCascade:SKMainWindowFrameAutosaveName];
@@ -504,26 +508,27 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
     viewController = [[NSViewController alloc] init];
     [viewController setView:pdfView];
     item = [NSSplitViewItem splitViewItemWithViewController:viewController];
-    [item setMinimumThickness:MIN_PDF_PANE_HEIGHT + titleBarHeight];
+    [item setMinimumThickness:MIN_PDF_PANE_HEIGHT + [self titleBarInset]];
     [pdfSplitViewController addSplitViewItem:item];
     
     [[pdfSplitViewController splitView] setVertical:NO];
     
     view = [pdfSplitViewController view];
     [view setFrame:[centerContentView bounds]];
-    constraints = @[[[view leadingAnchor] constraintEqualToAnchor:[centerContentView leadingAnchor]],
-        [[centerContentView trailingAnchor] constraintEqualToAnchor:[view trailingAnchor]],
-        [[view topAnchor] constraintEqualToAnchor:[centerContentView topAnchor]],
-        [[centerContentView bottomAnchor] constraintEqualToAnchor:[view bottomAnchor]]];
+    NSEdgeInsets padding = [pdfView pdfViewPadding];
+    pdfPaneLeftConstraint = [[view leadingAnchor] constraintEqualToAnchor:[centerContentView leadingAnchor] constant:padding.left];
+    pdfPaneRightConstraint = [[centerContentView trailingAnchor] constraintEqualToAnchor:[view trailingAnchor] constant:padding.right];
+    pdfPaneTopConstraint = [[view topAnchor] constraintEqualToAnchor:[centerContentView topAnchor] constant:0.0];
+    pdfPaneBottomConstraint = [[centerContentView bottomAnchor] constraintEqualToAnchor:[view bottomAnchor] constant:0.0];
+    constraints = @[pdfPaneLeftConstraint, pdfPaneRightConstraint, pdfPaneTopConstraint, pdfPaneBottomConstraint];
     if (mwcFlags.fullSizeContent == NO)
-        findBarTopConstraint = [constraints objectAtIndex:2];
+        findBarTopConstraint = pdfPaneTopConstraint;
     [view setTranslatesAutoresizingMaskIntoConstraints:NO];
     [centerContentView addSubview:view];
     [NSLayoutConstraint activateConstraints:constraints];
     
-    // revert to automatic contentInsets
-    if (mwcFlags.fullSizeContent)
-        [[pdfView embeddedScrollView] setAutomaticallyAdjustsContentInsets:YES];
+    // apply the contentInsets including the view padding, as we manage them ourselves
+    [self applyPDFViewContentInsets];
     
     if (hasWindowSetup == NO) {
         NSInteger windowSizeOption = [sud integerForKey:SKInitialWindowSizeOptionKey];
@@ -1883,13 +1888,13 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
     
     if (mwcFlags.fullSizeContent) {
         findBarTopConstraint = nil;
-        [[pdfView embeddedScrollView] setAutomaticallyAdjustsContentInsets:YES];
+        [self applyPDFViewContentInsets];
         if ([pdfView autoScales] && ([pdfView extendedDisplayMode] & kPDFDisplaySinglePageContinuous) == 0) {
             [pdfView setAutoScales:NO];
             [pdfView setAutoScales:YES];
         }
     } else {
-        findBarTopConstraint = [[[pdfSplitViewController view] topAnchor] constraintEqualToAnchor:[contentView topAnchor]];
+        pdfPaneTopConstraint = findBarTopConstraint = [[[pdfSplitViewController view] topAnchor] constraintEqualToAnchor:[contentView topAnchor] constant:0.0];
     }
     
     if (animate) {
@@ -1943,11 +1948,12 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
         constraints = @[
             [[findBar leadingAnchor] constraintEqualToAnchor:[centerContentView leadingAnchor]],
             [[centerContentView trailingAnchor] constraintEqualToAnchor:[findBar trailingAnchor]],
-            [[findBar topAnchor] constraintEqualToAnchor:[centerContentView topAnchor] constant:titleBarHeight]];
+            [[findBar topAnchor] constraintEqualToAnchor:[centerContentView topAnchor] constant:[self titleBarInset]]];
         [NSLayoutConstraint activateConstraints:constraints];
         if (mwcFlags.fullSizeContent == NO) {
             [findBarTopConstraint setActive:NO];
-            [[[[pdfSplitViewController view] topAnchor] constraintEqualToAnchor:[findBar bottomAnchor]] setActive:YES];
+            pdfPaneTopConstraint = [[[pdfSplitViewController view] topAnchor] constraintEqualToAnchor:[findBar bottomAnchor] constant:0.0];
+            [pdfPaneTopConstraint setActive:YES];
         }
         findBarTopConstraint = [constraints objectAtIndex:2];
         [centerContentView layoutSubtreeIfNeeded];
@@ -1956,8 +1962,9 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
         
         if (mwcFlags.fullSizeContent) {
             NSScrollView *scrollView = [pdfView embeddedScrollView];
+            NSEdgeInsets padding = [pdfView pdfViewPadding];
             [scrollView setAutomaticallyAdjustsContentInsets:NO];
-            [scrollView setContentInsets:NSEdgeInsetsMake(barHeight + titleBarHeight, 0.0, 0.0, 0.0)];
+            [scrollView setContentInsets:NSEdgeInsetsMake(barHeight + [self titleBarInset] + padding.top, 0.0, padding.bottom, 0.0)];
             if ([pdfView autoScales] && ([pdfView extendedDisplayMode] & kPDFDisplaySinglePageContinuous) == 0) {
                 [pdfView setAutoScales:NO];
                 [pdfView setAutoScales:YES];
@@ -2581,6 +2588,50 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
     return nil;
 }
 
+- (CGFloat)titleBarInset {
+    // the title bar takes up no space when it is hidden until hovered
+    return mwcFlags.hidesTitleBar ? 0.0 : titleBarHeight;
+}
+
+- (void)applyTitleBarInsets {
+    CGFloat inset = [self titleBarInset];
+    NSEdgeInsets padding = [pdfView pdfViewPadding];
+    // the side panes' top bars must stay clear of the title bar/toolbar strip, also while it auto-hides,
+    // because mouse clicks in that strip are taken by the window for dragging and never reach the controls
+    [rightSideController setTopInset:titleBarHeight];
+    if ([sideWindow isVisible] == NO)
+        [leftSideController setTopInset:titleBarHeight];
+    // the top padding is added to the content inset, so the top of the visible PDF area (and thus the top of the fitted view)
+    // is padding.top below the title bar; the bottom padding insets the pane itself, as does the side padding
+    if ([[findController view] window]) {
+        [findBarTopConstraint setConstant:inset];
+        [[pdfView embeddedScrollView] setContentInsets:NSEdgeInsetsMake([findController height] + inset + padding.top, 0.0, padding.bottom, 0.0)];
+    } else {
+        [self applyPDFViewContentInsets];
+    }
+    [[[pdfSplitViewController splitViewItems] firstObject] setMinimumThickness:MIN_PDF_PANE_HEIGHT + inset];
+}
+
+- (void)applyPDFViewContentInsets {
+    NSEdgeInsets padding = [pdfView pdfViewPadding];
+    NSScrollView *scrollView = [pdfView embeddedScrollView];
+    [scrollView setAutomaticallyAdjustsContentInsets:NO];
+    [scrollView setContentInsets:NSEdgeInsetsMake((mwcFlags.fullSizeContent ? [self titleBarInset] : 0.0) + padding.top, 0.0, padding.bottom, 0.0)];
+}
+
+- (void)applyPDFViewPadding {
+    NSEdgeInsets padding = [pdfView pdfViewPadding];
+    [pdfPaneLeftConstraint setConstant:padding.left];
+    [pdfPaneRightConstraint setConstant:padding.right];
+    [pdfPaneTopConstraint setConstant:0.0];
+    [pdfPaneBottomConstraint setConstant:0.0];
+    [self applyTitleBarInsets];
+}
+
+- (void)handlePDFViewPaddingChangedNotification:(NSNotification *)notification {
+    [self applyPDFViewPadding];
+}
+
 #pragma mark Observer registration
 
 - (void)registerAsObserver {
@@ -2589,7 +2640,8 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
                             SKDarkBackgroundColorKey, SKDarkFullScreenBackgroundColorKey,
                             SKThumbnailSizeKey, SKSnapshotThumbnailSizeKey,
                             SKInterpolationQualityKey,
-                            SKTableFontSizeKey])
+                            SKTableFontSizeKey,
+                            SKHideWindowTitleBarKey])
         [sud addObserver:self forKeyPath:key options:0 context:&SKMainWindowDefaultsObservationContext];
     if (@available(macOS 10.14, *))
         [NSApp addObserver:self forKeyPath:@"effectiveAppearance" options:0 context:&SKMainWindowAppObservationContext];
@@ -2597,6 +2649,7 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
         [[self window] addObserver:self forKeyPath:@"contentLayoutRect" options:0 context:&SKMainWindowContentLayoutObservationContext];
     [[[splitViewController splitViewItems] firstObject] addObserver:self forKeyPath:@"collapsed" options:NSKeyValueObservingOptionPrior context:&SKMainWindowSplitViewItemObservationContext];
     [[[splitViewController splitViewItems] lastObject] addObserver:self forKeyPath:@"collapsed" options:NSKeyValueObservingOptionPrior context:&SKMainWindowSplitViewItemObservationContext];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handlePDFViewPaddingChangedNotification:) name:SKPDFViewPaddingChangedNotification object:pdfView];
 }
 
 - (void)unregisterAsObserver {
@@ -2605,7 +2658,8 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
                             SKDarkBackgroundColorKey, SKDarkFullScreenBackgroundColorKey,
                             SKThumbnailSizeKey, SKSnapshotThumbnailSizeKey,
                             SKInterpolationQualityKey,
-                            SKTableFontSizeKey]) {
+                            SKTableFontSizeKey,
+                            SKHideWindowTitleBarKey]) {
         @try { [sud removeObserver:self forKeyPath:key context:&SKMainWindowDefaultsObservationContext]; }
         @catch (id e) {}
     }
@@ -2706,6 +2760,10 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
                 [[searchResults subarrayWithRange:NSMakeRange(1, [searchResults count] - 1)] makeObjectsPerformSelector:@selector(invalidateContextString)];
             [self updateTableFont];
             [self updatePageColumnWidthForTableViews:[NSArray arrayWithObjects:leftSideController.tocOutlineView, rightSideController.noteOutlineView, leftSideController.findTableView, leftSideController.groupedFindTableView, nil]];
+        } else if ([keyPath isEqualToString:SKHideWindowTitleBarKey]) {
+            mwcFlags.hidesTitleBar = [[NSUserDefaults standardUserDefaults] boolForKey:SKHideWindowTitleBarKey];
+            [(SKMainWindow *)[self window] setAutoHidesTitleBar:mwcFlags.hidesTitleBar];
+            [self applyTitleBarInsets];
         }
         
     } else if (context == &SKMainWindowAppObservationContext) {
@@ -2717,14 +2775,7 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
         CGFloat titleHeight = NSHeight([object frame]) - NSHeight([object contentLayoutRect]);
         if (fabs(titleHeight - titleBarHeight) > 0.0) {
             titleBarHeight = titleHeight;
-            [rightSideController setTopInset:titleBarHeight];
-            if ([sideWindow isVisible] == NO)
-                [leftSideController setTopInset:titleBarHeight];
-            if ([[findController view] window]) {
-                [findBarTopConstraint setConstant:titleBarHeight];
-                [[pdfView embeddedScrollView] setContentInsets:NSEdgeInsetsMake([findController height] + titleBarHeight, 0.0, 0.0, 0.0)];
-            }
-            [[[pdfSplitViewController splitViewItems] firstObject] setMinimumThickness:MIN_PDF_PANE_HEIGHT + titleBarHeight];
+            [self applyTitleBarInsets];
         }
         
     } else if (context == &SKMainWindowTransitionsObservationContext) {
