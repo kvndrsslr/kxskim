@@ -16,16 +16,28 @@ the title bar reserves no space, so the first row of the PDF is drawn at the fir
 ## Installation
 
 ```sh
-brew install --cask --no-quarantine kvndrsslr/formulae/kxskim
+brew install --cask kvndrsslr/formulae/kxskim
 ```
 
-`--no-quarantine` is required: the build is ad-hoc signed (no Developer ID), so Gatekeeper rejects
-the quarantined download. The fork keeps upstream's bundle identifier on purpose, so `kxskim`
-conflicts with the upstream `skim` cask — both install `Skim.app`; uninstall `skim` first if it is
-present.
+A plain install works. The build is ad-hoc signed (no Developer ID, so it cannot be notarized) and
+the cask clears the quarantine flag from the installed app afterwards; on a machine where you would
+rather brew never touches that attribute:
+
+```sh
+HOMEBREW_CASK_OPTS="--no-quarantine" brew install --cask kvndrsslr/formulae/kxskim
+```
+
+The fork keeps upstream's bundle identifier on purpose, so `kxskim` conflicts with the upstream
+`skim` cask — both install `Skim.app`; uninstall `skim` first if it is present.
 
 ## Build characteristics
 
 - arm64, macOS 27 (Golden Gate) or later
 - ad-hoc signed; the Sparkle feed still points at upstream's appcast, so "Check for Updates" offers
   plain Skim and would replace this build
+- the current `Skim-1.7.17.dmg` has
+  `sha256 7538469605ad5330e6807469b6d77bd50afe04b9753d62ec57f4e305a2f3fcf2`
+- the first `Skim-1.7.17.dmg` published had invalidated nested code signatures: the embedded
+  frameworks are signed when copied in and the release build then stripped their headers, leaving
+  seals that referenced files which no longer existed, so Gatekeeper reported `"Skim" is damaged and
+  can't be opened`. The current payload is re-signed and verifies clean.
