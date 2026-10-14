@@ -12,6 +12,9 @@ pointer enters the top of the window. Enable it in **Settings → General → "H
 unless hovered"** (default `SKHideWindowTitleBar`, also settable with
 `defaults write net.sourceforge.skim-app.skim SKHideWindowTitleBar -bool YES`). While it is enabled
 the title bar reserves no space, so the first row of the PDF is drawn at the first row of the window.
+The toolbar hides with it, and the side panes keep their top inset clear of that strip, so the
+contents pane's tab buttons and search field stay clickable while the chrome is hidden. Viewport
+padding and page gap settings live in **Settings → General**.
 
 ## Installation
 
@@ -36,7 +39,7 @@ The fork keeps upstream's bundle identifier on purpose, so `kxskim` conflicts wi
 - ad-hoc signed; the Sparkle feed still points at upstream's appcast, so "Check for Updates" offers
   plain Skim and would replace this build
 - the current `Skim-1.7.17.dmg` has
-  `sha256 7538469605ad5330e6807469b6d77bd50afe04b9753d62ec57f4e305a2f3fcf2`
+  `sha256 67b4677229d7bdc02fc80ab6e427c6c40aaaaec3acbc8a2c93bd726db8590e9c`
 - the first `Skim-1.7.17.dmg` published had invalidated nested code signatures: the embedded
   frameworks are signed when copied in and the release build then stripped their headers, leaving
   seals that referenced files which no longer existed, so Gatekeeper reported `"Skim" is damaged and
