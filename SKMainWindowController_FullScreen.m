@@ -123,7 +123,7 @@ static CGFloat fullScreenToolbarOffset = 0.0;
             [sideWindow makeFirstResponder:nil];
         if (mwcFlags.fullSizeContent) {
             [leftSideController.topBar setStyle:SKTopBarStyleSearchBar];
-            [leftSideController setTopInset:[self titleBarInset]];
+            [leftSideController setTopInset:titleBarHeight];
         } else {
             [leftSideController.topBar setDrawsBackground:YES];
         }

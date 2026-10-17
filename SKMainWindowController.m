@@ -1948,7 +1948,9 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
         constraints = @[
             [[findBar leadingAnchor] constraintEqualToAnchor:[centerContentView leadingAnchor]],
             [[centerContentView trailingAnchor] constraintEqualToAnchor:[findBar trailingAnchor]],
-            [[findBar topAnchor] constraintEqualToAnchor:[centerContentView topAnchor] constant:[self titleBarInset]]];
+            // the find bar must stay clear of the title bar/toolbar strip, also while it auto-hides,
+            // because mouse clicks in that strip are taken by the window for dragging and never reach the controls
+            [[findBar topAnchor] constraintEqualToAnchor:[centerContentView topAnchor] constant:titleBarHeight]];
         [NSLayoutConstraint activateConstraints:constraints];
         if (mwcFlags.fullSizeContent == NO) {
             [findBarTopConstraint setActive:NO];
@@ -1964,7 +1966,7 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
             NSScrollView *scrollView = [pdfView embeddedScrollView];
             NSEdgeInsets padding = [pdfView pdfViewPadding];
             [scrollView setAutomaticallyAdjustsContentInsets:NO];
-            [scrollView setContentInsets:NSEdgeInsetsMake(barHeight + [self titleBarInset] + padding.top, 0.0, padding.bottom, 0.0)];
+            [scrollView setContentInsets:NSEdgeInsetsMake(barHeight + titleBarHeight + padding.top, 0.0, padding.bottom, 0.0)];
             if ([pdfView autoScales] && ([pdfView extendedDisplayMode] & kPDFDisplaySinglePageContinuous) == 0) {
                 [pdfView setAutoScales:NO];
                 [pdfView setAutoScales:YES];
@@ -2604,8 +2606,9 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
     // the top padding is added to the content inset, so the top of the visible PDF area (and thus the top of the fitted view)
     // is padding.top below the title bar; the bottom padding insets the pane itself, as does the side padding
     if ([[findController view] window]) {
-        [findBarTopConstraint setConstant:inset];
-        [[pdfView embeddedScrollView] setContentInsets:NSEdgeInsetsMake([findController height] + inset + padding.top, 0.0, padding.bottom, 0.0)];
+        // the find bar is a control strip, so like the side panes' top bars it stays clear of the strip even when the chrome auto-hides
+        [findBarTopConstraint setConstant:titleBarHeight];
+        [[pdfView embeddedScrollView] setContentInsets:NSEdgeInsetsMake([findController height] + titleBarHeight + padding.top, 0.0, padding.bottom, 0.0)];
     } else {
         [self applyPDFViewContentInsets];
     }
