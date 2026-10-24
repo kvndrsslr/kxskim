@@ -145,7 +145,6 @@ NSString * const SKPDFViewPageKey = @"page";
 #define PAGEGAP_KEY                 @"pageGap"
 
 static char SKPDFViewDefaultsObservationContext;
-static char SKPDFViewScrollBoundsObservationContext;
 
 static NSUInteger moveReadingBarModifiers = NSEventModifierFlagCommand;
 static NSUInteger resizeReadingBarModifiers = NSEventModifierFlagCommand | NSEventModifierFlagShift;
@@ -391,9 +390,6 @@ static const NSInteger SKFocusMarkerTicks = 16;
 
 - (void)removeLoupeWindow;
 
-- (void)alignScrollOriginToDevicePixels;
-- (void)handleScrollBoundsDidChangeNotification:(NSNotification *)notification;
-
 - (void)handlePageChangedNotification:(NSNotification *)notification;
 - (void)handleScaleChangedNotification:(NSNotification *)notification;
 - (void)handleUpdateTrackingAreasNotification:(NSNotification *)notification;
@@ -489,13 +485,8 @@ static const NSInteger SKFocusMarkerTicks = 16;
     [nc addObserver:self selector:@selector(handleScaleChangedNotification:)
                                                  name:PDFViewScaleChangedNotification object:self];
     NSView *view = [[self embeddedScrollView] contentView];
-    if (view) {
+    if (view)
         [nc addObserver:self selector:@selector(handleUpdateTrackingAreasNotification:) name:NSViewDidUpdateTrackingAreasNotification object:view];
-        // PDFKit lays out pages at fractional device-pixel positions at many zoom levels, which antialiases the
-        // white page background into a visible 1px seam at the page edges; keep the scroll origin on the device
-        // pixel grid so page rects land on integral device pixels
-        [view addObserver:self forKeyPath:@"bounds" options:NSKeyValueObservingOptionPrior context:&SKPDFViewScrollBoundsObservationContext];
-    }
     NSUserDefaults *sud = [NSUserDefaults standardUserDefaults];
     [sud addObserver:self forKeyPath:SKReadingBarColorKey options:0 context:&SKPDFViewDefaultsObservationContext];
     [sud addObserver:self forKeyPath:SKReadingBarInvertKey options:0 context:&SKPDFViewDefaultsObservationContext];
@@ -523,9 +514,6 @@ static const NSInteger SKFocusMarkerTicks = 16;
     NSUserDefaults *sud = [NSUserDefaults standardUserDefaults];
     [sud removeObserver:self forKeyPath:SKReadingBarColorKey context:&SKPDFViewDefaultsObservationContext];
     [sud removeObserver:self forKeyPath:SKReadingBarInvertKey context:&SKPDFViewDefaultsObservationContext];
-    NSClipView *clipView = [[self embeddedScrollView] contentView];
-    if (clipView)
-        [clipView removeObserver:self forKeyPath:@"bounds" context:&SKPDFViewScrollBoundsObservationContext];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [[SKImageToolTipWindow sharedToolTipWindow] orderOut:self];
     [self removePDFToolTipRects];
@@ -3491,46 +3479,6 @@ static inline CGFloat secondaryOutset(CGFloat x) {
         [loupeController updateContents];
 }
 
-// PDFKit positions the document view at fractional device-pixel offsets at most zoom levels. A page edge that
-// falls between device pixels makes the white page background antialias into a 1px light seam at the page edges
-// (most visible on dark art pages). Rounding the visible scroll origin to the device-pixel grid keeps page rects
-// on integral device pixels, so the page background and the page content clip identically and no seam is drawn.
-- (void)alignScrollOriginToDevicePixels {
-    NSScrollView *scrollView = [self embeddedScrollView];
-    NSClipView *clipView = [scrollView contentView];
-    NSView *documentView = [scrollView documentView];
-    if (clipView == nil || documentView == nil)
-        return;
-
-    NSWindow *window = [self window];
-    CGFloat backingScaleFactor = [window respondsToSelector:@selector(backingScaleFactor)] ? [window backingScaleFactor] : [[NSScreen mainScreen] backingScaleFactor];
-    if (backingScaleFactor <= 0.0)
-        return;
-    CGFloat pixel = 1.0 / backingScaleFactor;
-
-    NSRect bounds = [clipView bounds];
-    CGFloat alignedX = round(bounds.origin.x / pixel) * pixel;
-    CGFloat alignedY = round(bounds.origin.y / pixel) * pixel;
-    if (alignedX == bounds.origin.x && alignedY == bounds.origin.y)
-        return;
-
-    // only shift while the document is larger than the clip view in that axis; a centered page that fits must not move
-    NSRect docRect = [documentView frame];
-    if (NSWidth(docRect) > NSWidth(bounds))
-        bounds.origin.x = alignedX;
-    if (NSHeight(docRect) > NSHeight(bounds))
-        bounds.origin.y = alignedY;
-    if (NSEqualPoints(bounds.origin, [clipView bounds].origin))
-        return;
-
-    [clipView scrollToPoint:bounds.origin];
-    [scrollView reflectScrolledClipView:clipView];
-}
-
-- (void)handleScrollBoundsDidChangeNotification:(NSNotification *)notification {
-    [self alignScrollOriginToDevicePixels];
-}
-
 - (void)handleScaleChangedNotification:(NSNotification *)notification {
     [self resetPDFToolTipRects];
     [self updatePacer];
@@ -3703,10 +3651,7 @@ static inline CGFloat secondaryOutset(CGFloat x) {
 #pragma mark KVO
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if (context == &SKPDFViewScrollBoundsObservationContext) {
-        if (([change[NSKeyValueChangeNotificationIsPriorKey] boolValue]) == NO)
-            [self alignScrollOriginToDevicePixels];
-    } else if (context == &SKPDFViewDefaultsObservationContext) {
+    if (context == &SKPDFViewDefaultsObservationContext) {
         if (readingBar) {
             PDFPage *page = [readingBar page];
             [self setNeedsDisplay:([keyPath isEqualToString:SKReadingBarInvertKey] || [[NSUserDefaults standardUserDefaults] boolForKey:SKReadingBarInvertKey]) forReadingBarBounds:[readingBar currentBounds] onPage:page notify:YES];
