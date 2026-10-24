@@ -61,8 +61,7 @@ local git-svn clone, so upstream history stays queryable in Git:
 
 ```sh
 brew install git-svn
-git svn clone --log-window-size=5000 -r 15000:HEAD \
-  -T trunk -b branches -t tags \
+git svn clone --log-window-size=5000 -r 16690:HEAD -T trunk \
   https://svn.code.sf.net/p/skim-app/code ~/src/skim-upstream
 
 cd ~/repos/private/skim
@@ -72,17 +71,17 @@ git fetch upstream
 
 Branch roles:
 
-- `main` carries only the fork's own commits, rebased on top of upstream. Upstream tags
-  (`1.7.17`) are the base; `git log upstream/master..main` lists exactly the fork's delta.
-- `upstream/master` is the git-svn mirror, fetched read-only. Its commit hashes are rewritten by
+- `main` carries only the fork's own commits, rebased on top of upstream; `git log
+  upstream/main..main` lists exactly the fork's delta.
+- `upstream/main` is the git-svn mirror, fetched read-only. Its commit hashes are rewritten by
   git-svn, so they are never referenced from published history.
 
-Sync with `./sync-upstream.sh`: it runs `git svn fetch` in the mirror, updates `upstream/master`,
+Sync with `./sync-upstream.sh`: it runs `git svn fetch` in the mirror, updates `upstream/main`,
 saves the fork commits as patches to `$TMPDIR/skim-fork-patches`, rebases `main`, and prints a
 `git range-diff` of the rebase. Rebase conflict resolutions are reused through `git rerere`
 (`git config rerere.enabled true`). The rebase rewrites history, so publish with
 `git push --force-with-lease origin main`; the cask consumes release artifacts, not commits.
 
-The clone starts at r15000 rather than r1: twenty years of history is mostly binary churn and takes
-hours to import, while r15000 already predates the 1.7.x line (the 1.7.17 tag is r16537). Later
-`git svn fetch` calls pick up new revisions incrementally.
+The clone starts at r16690 rather than r1: rebasing needs a base whose tree is upstream's current
+state, not twenty years of binary churn, and the full import takes hours. Later `git svn fetch`
+calls pick up new revisions incrementally.
