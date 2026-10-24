@@ -61,7 +61,8 @@ local git-svn clone, so upstream history stays queryable in Git:
 
 ```sh
 brew install git-svn
-git svn clone --log-window-size=5000 -T trunk -b branches -t tags \
+git svn clone --log-window-size=5000 -r 15000:HEAD \
+  -T trunk -b branches -t tags \
   https://svn.code.sf.net/p/skim-app/code ~/src/skim-upstream
 
 cd ~/repos/private/skim
@@ -82,5 +83,6 @@ saves the fork commits as patches to `$TMPDIR/skim-fork-patches`, rebases `main`
 (`git config rerere.enabled true`). The rebase rewrites history, so publish with
 `git push --force-with-lease origin main`; the cask consumes release artifacts, not commits.
 
-If the full SVN history is too slow to clone, start with `-r 16000:HEAD` and let later
-`git svn fetch` calls backfill the rest.
+The clone starts at r15000 rather than r1: twenty years of history is mostly binary churn and takes
+hours to import, while r15000 already predates the 1.7.x line (the 1.7.17 tag is r16537). Later
+`git svn fetch` calls pick up new revisions incrementally.
