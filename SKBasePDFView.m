@@ -44,6 +44,7 @@
 #import "PDFAnnotation_SKExtensions.h"
 #import "PDFPage_SKExtensions.h"
 #import "PDFDestination_SKExtensions.h"
+#import "NSColor_SKExtensions.h"
 #import "NSScroller_SKExtensions.h"
 
 #define SKNeverChangeZoomFromLinksKey @"SKNeverChangeZoomFromLinks"
@@ -59,6 +60,7 @@ static char SKBasePDFViewDefaultsObservationContext;
 @interface PDFView (SKBasePrivateDeclarations)
 - (NSInteger)currentHistoryIndex;
 - (id)pageViewForPageAtIndex:(NSUInteger)index;
+- (void)setPageColor:(NSColor *)color;
 @end
 
 @interface NSView (SKPDFPageViewPrivateDeclarations)
@@ -70,6 +72,7 @@ static char SKBasePDFViewDefaultsObservationContext;
 @interface SKBasePDFView ()
 
 - (void)handleScrollerStyleChangedNotification:(NSNotification *)notification;
+- (void)updatePageColor;
 
 @end
 
@@ -267,6 +270,21 @@ static inline NSArray *defaultKeysToObserve() {
     // setting the maxScaleFactor resets autoScales
     if (autoScale != [self autoScales])
         [self setAutoScales:autoScale];
+    [self updatePageColor];
+}
+
+// PDFKit fills each page with its page color underneath the page content. Where the scaled page rect misses
+// the device-pixel grid that fill antialiases into a 1px bright seam along the page edges, conspicuous on a
+// dark pane. Matching the fill to a dark pane background hides the seam; light panes keep the default white
+// paper, against which the seam never shows.
+- (void)updatePageColor {
+    NSColor *color = [self backgroundColor];
+    [self setPageColor:[color luminance] < 0.5 ? color : nil];
+}
+
+- (void)setBackgroundColor:(NSColor *)backgroundColor {
+    [super setBackgroundColor:backgroundColor];
+    [self updatePageColor];
 }
 
 - (void)goToRect:(NSRect)rect onPage:(PDFPage *)page {

@@ -17,7 +17,10 @@ strip, so the contents pane's tab buttons and search field, and the find bar's s
 Find Previous/Next and Done, all stay clickable while the chrome is hidden. Viewport padding and
 page gap settings live in **Settings → General**. In horizontal continuous display mode
 the Contents pane's destinations keep the start of the target page clear of the pane, and a jump
-briefly highlights the destination.
+briefly highlights the destination. Page edges stay clean: on dark backgrounds the page fill follows
+the pane color, and an overlay repaints the outermost device pixels of every page edge with the
+page's own content, so PDFKit's 1px antialiasing line no longer shows on dark art pages or between
+light pages, in every display mode.
 
 ## Installation
 

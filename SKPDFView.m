@@ -339,11 +339,14 @@ static const NSInteger SKFocusMarkerTicks = 16;
 - (void)enableSwipeGestures:(BOOL)flag;
 @end
 
+@class SKPageEdgeOverlayView;
+
 @interface SKPDFView () <SKReadingBarDelegate, SKLayerDelegate, SKTextNoteEditorDelegate>
 
 @property (strong) SKReadingBar *readingBar;
 @property (strong) SKSyncDot *syncDot;
 @property (strong) SKFocusMarker *focusMarker;
+@property (strong) SKPageEdgeOverlayView *pageEdgeOverlay;
 
 - (void)showFocusMarkerForDestination:(PDFDestination *)destination;
 - (void)clearFocusMarker;
@@ -390,12 +393,94 @@ static const NSInteger SKFocusMarkerTicks = 16;
 
 - (void)removeLoupeWindow;
 
+- (void)updatePageEdgeOverlay;
+- (void)handleScrollBoundsChangedNotification:(NSNotification *)notification;
+
 - (void)handlePageChangedNotification:(NSNotification *)notification;
 - (void)handleScaleChangedNotification:(NSNotification *)notification;
 - (void)handleUpdateTrackingAreasNotification:(NSNotification *)notification;
 - (void)handleOpenOrCloseUndoGroupNotification:(NSNotification *)notification;
 - (void)registerForDocumentNotifications;
 - (void)unregisterForDocumentNotifications;
+
+@end
+
+#pragma mark Page edge overlay
+
+// PDFKit fills the page rect with its page color underneath the page content. Where the scaled page rect misses
+// the device-pixel grid, that fill antialiases into a 1px line along the page edge. No single page color can
+// match both light and dark pages, so the line shows against whichever page differs from the pane. This overlay
+// paints the outermost device pixels of every page edge with the page content itself, which hides the seam in
+// every display mode without touching the rendering pipeline.
+static const CGFloat SKPageEdgeSeamWidth = 2.0; // device pixels
+
+@interface SKPageEdgeOverlayView : NSView
+@property (nonatomic, weak) SKPDFView *pdfView;
+@end
+
+@implementation SKPageEdgeOverlayView
+
+- (BOOL)isOpaque { return NO; }
+
+- (NSView *)hitTest:(NSPoint)point { return nil; }
+
+- (void)drawRect:(NSRect)dirtyRect {
+    SKPDFView *pdfView = [self pdfView];
+    if (pdfView == nil || [pdfView document] == nil || [self isHiddenOrHasHiddenAncestor])
+        return;
+    // a light pane never shows the seam: it keeps the default white paper, which matches light pages
+    if ([[pdfView backgroundColor] luminance] >= 0.5)
+        return;
+    CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
+    CGFloat backing = [[self window] backingScaleFactor];
+    CGFloat width = SKPageEdgeSeamWidth / backing;
+    PDFDisplayBox box = [pdfView displayBox];
+    BOOL flipped = [self isFlipped];
+    
+    for (PDFPage *page in [pdfView displayedPages]) {
+        NSRect pageBounds = [page boundsForBox:box];
+        NSRect rect = [self convertRect:[pdfView convertRect:pageBounds fromPage:page] fromView:pdfView];
+        NSRect visible = NSIntersectionRect(rect, dirtyRect);
+        if (NSIsEmptyRect(visible) || NSWidth(pageBounds) <= 0.0 || NSHeight(pageBounds) <= 0.0)
+            continue;
+        CGRect device = CGContextConvertRectToDeviceSpace(context, NSRectToCGRect(rect));
+        // only edges that fall between device pixels can show the antialiased fill
+        BOOL left = fabs(CGRectGetMinX(device) - round(CGRectGetMinX(device))) > 0.01;
+        BOOL right = fabs(CGRectGetMaxX(device) - round(CGRectGetMaxX(device))) > 0.01;
+        BOOL top = fabs(CGRectGetMinY(device) - round(CGRectGetMinY(device))) > 0.01;
+        BOOL bottom = fabs(CGRectGetMaxY(device) - round(CGRectGetMaxY(device))) > 0.01;
+        if (left == NO && right == NO && top == NO && bottom == NO)
+            continue;
+        
+        CGFloat scaleX = NSWidth(rect) / NSWidth(pageBounds);
+        CGFloat scaleY = NSHeight(rect) / NSHeight(pageBounds);
+        
+        // draw the page content clipped to one thin strip at a page edge
+        void (^drawEdge)(NSRect) = ^(NSRect edge) {
+            NSRect clip = NSIntersectionRect(edge, visible);
+            if (NSIsEmptyRect(clip))
+                return;
+            CGContextSaveGState(context);
+            CGContextClipToRect(context, NSRectToCGRect(clip));
+            if (flipped) {
+                CGContextTranslateCTM(context, NSMinX(rect), NSMaxY(rect));
+                CGContextScaleCTM(context, scaleX, -scaleY);
+            } else {
+                CGContextTranslateCTM(context, NSMinX(rect), NSMinY(rect));
+                CGContextScaleCTM(context, scaleX, scaleY);
+            }
+            [page drawWithBox:box toContext:context];
+            CGContextRestoreGState(context);
+        };
+        
+        if (left)
+            drawEdge(NSMakeRect(NSMinX(rect), NSMinY(rect), width, NSHeight(rect)));
+        if (right)
+            drawEdge(NSMakeRect(NSMaxX(rect) - width, NSMinY(rect), width, NSHeight(rect)));
+        if (top || bottom)
+            drawEdge(NSMakeRect(NSMinX(rect), top ? NSMinY(rect) : NSMaxY(rect) - width, NSWidth(rect), width));
+    }
+}
 
 @end
 
@@ -487,6 +572,8 @@ static const NSInteger SKFocusMarkerTicks = 16;
     NSView *view = [[self embeddedScrollView] contentView];
     if (view)
         [nc addObserver:self selector:@selector(handleUpdateTrackingAreasNotification:) name:NSViewDidUpdateTrackingAreasNotification object:view];
+    if (view)
+        [nc addObserver:self selector:@selector(handleScrollBoundsChangedNotification:) name:NSViewBoundsDidChangeNotification object:view];
     NSUserDefaults *sud = [NSUserDefaults standardUserDefaults];
     [sud addObserver:self forKeyPath:SKReadingBarColorKey options:0 context:&SKPDFViewDefaultsObservationContext];
     [sud addObserver:self forKeyPath:SKReadingBarInvertKey options:0 context:&SKPDFViewDefaultsObservationContext];
@@ -576,12 +663,38 @@ static const NSInteger SKFocusMarkerTicks = 16;
 - (void)layoutDocumentView {
     [super layoutDocumentView];
     [self resetPDFToolTipRects];
+    [self updatePageEdgeOverlay];
     if (editor) {
         if ([self isPageAtIndexDisplayed:[currentAnnotation pageIndex]])
             [self textNoteEditorSetFrame:editor];
         else
             [self commitEditing];
     }
+}
+
+- (void)updatePageEdgeOverlay {
+    NSView *documentView = [self documentView];
+    SKPageEdgeOverlayView *overlay = [self pageEdgeOverlay];
+    if (documentView == nil) {
+        [overlay removeFromSuperview];
+        return;
+    }
+    if (overlay == nil) {
+        overlay = [[SKPageEdgeOverlayView alloc] initWithFrame:NSZeroRect];
+        [self setPageEdgeOverlay:overlay];
+    }
+    [overlay setPdfView:self];
+    if ([overlay superview] != documentView) {
+        [overlay removeFromSuperview];
+        [documentView addSubview:overlay];
+    }
+    [overlay setFrame:[documentView bounds]];
+    [overlay setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    [overlay setNeedsDisplay:YES];
+}
+
+- (void)handleScrollBoundsChangedNotification:(NSNotification *)notification {
+    [[self pageEdgeOverlay] setNeedsDisplay:YES];
 }
 
 #pragma mark Drawing
@@ -824,6 +937,7 @@ static const NSInteger SKFocusMarkerTicks = 16;
         [self registerForDocumentNotifications];
     
     [self resetPDFToolTipRects];
+    [self updatePageEdgeOverlay];
     
     if (readingBarPageIndex != NSNotFound) {
         PDFPage *page = nil;
@@ -847,6 +961,7 @@ static const NSInteger SKFocusMarkerTicks = 16;
 - (void)setBackgroundColor:(NSColor *)newBackgroundColor {
     [super setBackgroundColor:newBackgroundColor];
     [loupeController updateBackgroundColor];
+    [[self pageEdgeOverlay] setNeedsDisplay:YES];
 }
 
 - (NSColor *)backgroundColor {
@@ -3477,6 +3592,7 @@ static inline CGFloat secondaryOutset(CGFloat x) {
 - (void)handlePageChangedNotification:(NSNotification *)notification {
     if (([self displayMode] & kPDFDisplaySinglePageContinuous) == 0 && toolMode == SKToolModeMagnify)
         [loupeController updateContents];
+    [[self pageEdgeOverlay] setNeedsDisplay:YES];
 }
 
 - (void)handleScaleChangedNotification:(NSNotification *)notification {
