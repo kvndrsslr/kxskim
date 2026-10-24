@@ -92,6 +92,7 @@
         formatter = [[NSDateFormatter alloc] init];
         [formatter setFormatterBehavior:NSDateFormatterBehavior10_4];
         [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"]];
+        [formatter setCalendar:[NSCalendar calendarWithIdentifier:NSCalendarIdentifierGregorian]];
         [formatter setDateFormat:@"yyyy-MM-dd HH:mm:ss ZZZ"];
     }
     return [formatter stringFromDate:self];
@@ -103,6 +104,7 @@
         formatter = [[NSDateFormatter alloc] init];
         [formatter setFormatterBehavior:NSDateFormatterBehavior10_4];
         [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"]];
+        [formatter setCalendar:[NSCalendar calendarWithIdentifier:NSCalendarIdentifierGregorian]];
         [formatter setDateFormat:@"yyyyMMddHHmmssZZ"];
     }
     NSMutableString *dateString = [NSMutableString stringWithString:@"D:"];
