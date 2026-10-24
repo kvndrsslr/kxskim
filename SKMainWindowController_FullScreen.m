@@ -181,11 +181,8 @@ static CGFloat fullScreenToolbarOffset = 0.0;
     return mainScreen;
 }
 
-- (void)showNotesForPresentationScreen:(NSScreen *)presentationScreen {
+- (void)showNotesForPresentationOnScreen:(NSScreen *)screen {
     NSDocument *notesDocument = [self presentationNotesDocument];
-    if (notesDocument == nil)
-        return;
-    
     PDFDocument *pdfDoc = [notesDocument pdfDocument];
     NSInteger offset = [self presentationNotesOffset];
     NSUInteger pageIndex = MAX(0, MIN((NSInteger)[pdfDoc pageCount], (NSInteger)[[pdfView currentPage] pageIndex] + offset));
@@ -200,7 +197,6 @@ static CGFloat fullScreenToolbarOffset = 0.0;
         
         [preview setDelegate:self];
         
-        NSScreen *screen = [self screenForPresentationWindowAvoidingScreen:presentationScreen preferExternal:NO];
         [preview setPdfDocument:[pdfView document] previewPageNumber:pageIndex displayOnScreen:screen];
     
         [[self document] addWindowController:preview];
@@ -284,11 +280,10 @@ static CGFloat fullScreenToolbarOffset = 0.0;
     
     interactionMode = SKPresentationMode;
     
-    NSScreen *screen = nil;
+    NSDocument *notesDocument = [self presentationNotesDocument];
+    NSScreen *notesScreen = (notesDocument && notesDocument != [self document]) ? [[notesDocument primaryWindow] screen] : nil;
     BOOL preferExternal = [[NSUserDefaults standardUserDefaults] boolForKey:SKPreferExternalDisplayForPresentationKey];
-    if ([self presentationNotesDocument] && [self presentationNotesDocument] != [self document])
-        screen = [[[self presentationNotesDocument] primaryWindow] screen];
-    screen = [self screenForPresentationWindowAvoidingScreen:screen preferExternal:preferExternal];
+    NSScreen *screen = [self screenForPresentationWindowAvoidingScreen:notesScreen preferExternal:preferExternal];
     
     NSWindow *presentationWindow = [[SKFullScreenWindow alloc] initWithContentRect:[screen frame]];
     [presentationWindow setAlphaValue:0.0];
@@ -305,7 +300,11 @@ static CGFloat fullScreenToolbarOffset = 0.0;
     
     [presentationWindow orderFront:nil];
     
-    [self showNotesForPresentationScreen:screen];
+    if (notesDocument) {
+        if (notesScreen == nil)
+            notesScreen = [self screenForPresentationWindowAvoidingScreen:screen preferExternal:NO];
+        [self showNotesForPresentationOnScreen:notesScreen];
+    }
     
     BOOL shouldFadeOut = NO;
     if ([[normalWindow tabbedWindows] count] > 1) {
@@ -354,7 +353,8 @@ static CGFloat fullScreenToolbarOffset = 0.0;
             
             [presentationView didOpen];
             
-            [self addPresentationNotesNavigation];
+            if (notesDocument)
+                [self addPresentationNotesNavigation];
             
             mwcFlags.isSwitchingFullScreen = 0;
         }];
