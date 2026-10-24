@@ -91,6 +91,7 @@
     if (formatter == nil) {
         formatter = [[NSDateFormatter alloc] init];
         [formatter setFormatterBehavior:NSDateFormatterBehavior10_4];
+        [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"]];
         [formatter setDateFormat:@"yyyy-MM-dd HH:mm:ss ZZZ"];
     }
     return [formatter stringFromDate:self];
@@ -100,6 +101,8 @@
     static NSDateFormatter *formatter = nil;
     if (formatter == nil) {
         formatter = [[NSDateFormatter alloc] init];
+        [formatter setFormatterBehavior:NSDateFormatterBehavior10_4];
+        [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"]];
         [formatter setDateFormat:@"yyyyMMddHHmmssZZ"];
     }
     NSMutableString *dateString = [NSMutableString stringWithString:@"D:"];
