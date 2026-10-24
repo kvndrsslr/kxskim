@@ -46,8 +46,8 @@ The fork keeps upstream's bundle identifier on purpose, so `kxskim` conflicts wi
 - arm64, macOS 27 (Golden Gate) or later
 - ad-hoc signed; the Sparkle feed still points at upstream's appcast, so "Check for Updates" offers
   plain Skim and would replace this build
-- the current `Skim-1.7.17.dmg` has
-  `sha256 98acc0e26d5b8e34f26bc224832df29a472d807afcb4e01ebd0608136fd5686e`
+- the current `Skim-1.7.17.1.dmg` (fork rebased onto upstream r16706, upstream trunk still reports
+  1.7.17) has `sha256 4dbb78204d684b46f9168dbf3ed53fe34bf57e52aa650adc4b5bf04e892d438a`
 - the first `Skim-1.7.17.dmg` published had invalidated nested code signatures: the embedded
   frameworks are signed when copied in and the release build then stripped their headers, leaving
   seals that referenced files which no longer existed, so Gatekeeper reported `"Skim" is damaged and

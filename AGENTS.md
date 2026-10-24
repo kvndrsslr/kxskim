@@ -26,6 +26,29 @@ Product: `build/DerivedDataRelease/Build/Products/Release/Skim.app`. Install it 
 `osascript -e 'quit app "Skim"'`, then `ditto <product> /Applications/Skim.app`. The build is
 ad-hoc signed; `codesign_skim.sh` is upstream's release signing script.
 
+## Release
+
+Upstream's trunk keeps `MARKETING_VERSION = 1.7.17` in `Configurations/Skim-Common.xcconfig`, so a
+fork release after an upstream sync needs a version that brew can order: pass it on the build line
+instead of editing the xcconfig (an edit there would conflict on every rebase):
+
+```sh
+xcodebuild … MARKETING_VERSION=1.7.17.1 CURRENT_PROJECT_VERSION=170 build
+```
+
+Then package and publish:
+
+```sh
+hdiutil create -volname Skim -srcfolder <staging with Skim.app and /Applications symlink> \
+  -ov -format UDZO /tmp/Skim-1.7.17.1.dmg
+gh release create v1.7.17.1 /tmp/Skim-1.7.17.1.dmg --repo kvndrsslr/skim --title … --notes …
+# then bump version and sha256 in Casks/kxskim.rb of kvndrsslr/homebrew-formulae and push
+brew reinstall --cask kvndrsslr/formulae/kxskim
+```
+
+`codesign --verify --deep --strict` the app before publishing: a build whose embedded frameworks
+lost their seal fails Gatekeeper with `"Skim" is damaged`.
+
 ## Upstream tracking
 
 Upstream is SVN: `https://svn.code.sf.net/p/skim-app/code` (`trunk`, `branches`, `tags`). A local
