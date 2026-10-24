@@ -26,8 +26,9 @@ if [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; then
     exit 1
 fi
 
-if [ -n "$(git status --porcelain)" ]; then
-    echo "error: the working tree is dirty; commit or stash first" >&2
+# untracked files are fine; a rebase only fails if one of them collides with an upstream addition
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+    echo "error: the working tree has uncommitted changes; commit or stash first" >&2
     exit 1
 fi
 
