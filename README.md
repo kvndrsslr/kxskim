@@ -15,7 +15,9 @@ the title bar reserves no space, so the first row of the PDF is drawn at the fir
 The toolbar hides with it, and the side panes and the find bar keep their top inset clear of that
 strip, so the contents pane's tab buttons and search field, and the find bar's search field,
 Find Previous/Next and Done, all stay clickable while the chrome is hidden. Viewport padding and
-page gap settings live in **Settings → General**. In horizontal continuous display mode
+page gap settings live in **Settings → General**; the page gap separates pages in the single-page
+continuous modes, and in the two-up and book modes it only separates spreads, so the two pages of a
+spread touch. In horizontal continuous display mode
 the Contents pane's destinations keep the start of the target page clear of the pane, and a jump
 briefly highlights the destination. Page edges stay clean: on dark backgrounds the page fill follows
 the pane color, and an overlay repaints the outermost device pixels of every page edge with the
@@ -50,3 +52,35 @@ The fork keeps upstream's bundle identifier on purpose, so `kxskim` conflicts wi
   frameworks are signed when copied in and the release build then stripped their headers, leaving
   seals that referenced files which no longer existed, so Gatekeeper reported `"Skim" is damaged and
   can't be opened`. The current payload is re-signed and verifies clean.
+
+## Tracking upstream
+
+Upstream Skim is developed in Subversion at `svn://svn.code.sf.net/p/skim-app/code`
+(`trunk`, `branches`, `tags`); there is no maintained Git mirror. This fork tracks it through a
+local git-svn clone, so upstream history stays queryable in Git:
+
+```sh
+brew install git-svn
+git svn clone --log-window-size=5000 -T trunk -b branches -t tags \
+  https://svn.code.sf.net/p/skim-app/code ~/src/skim-upstream
+
+cd ~/repos/private/skim
+git remote add upstream ~/src/skim-upstream
+git fetch upstream
+```
+
+Branch roles:
+
+- `main` carries only the fork's own commits, rebased on top of upstream. Upstream tags
+  (`1.7.17`) are the base; `git log upstream/master..main` lists exactly the fork's delta.
+- `upstream/master` is the git-svn mirror, fetched read-only. Its commit hashes are rewritten by
+  git-svn, so they are never referenced from published history.
+
+Sync with `./sync-upstream.sh`: it runs `git svn fetch` in the mirror, updates `upstream/master`,
+saves the fork commits as patches to `$TMPDIR/skim-fork-patches`, rebases `main`, and prints a
+`git range-diff` of the rebase. Rebase conflict resolutions are reused through `git rerere`
+(`git config rerere.enabled true`). The rebase rewrites history, so publish with
+`git push --force-with-lease origin main`; the cask consumes release artifacts, not commits.
+
+If the full SVN history is too slow to clone, start with `-r 16000:HEAD` and let later
+`git svn fetch` calls backfill the rest.
