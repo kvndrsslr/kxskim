@@ -50,6 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)colorFiltersDidChange;
 
+- (void)updatePageShadows;
+
 - (void)scrollToSKDestination:(SKDestination)destination;
 
 - (void)resetHistory;

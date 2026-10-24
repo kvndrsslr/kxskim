@@ -214,8 +214,15 @@ static inline NSArray *defaultKeysToObserve() {
 
 - (void)setDisplaysPageBreaks:(BOOL)pageBreaks {
     [super setDisplaysPageBreaks:pageBreaks];
+    [self updatePageShadows];
+}
+
+// PDFKit draws a page shadow at every page edge when page breaks are displayed. In the two-up modes the two
+// pages of a spread touch, so that shadow draws a line straight across the spread; there the page gap
+// separates spreads instead.
+- (void)updatePageShadows {
     if (@available(macOS 10.14, *))
-        [self enablePageShadows:pageBreaks];
+        [self enablePageShadows:[self displaysPageBreaks] && ([self displayMode] & kPDFDisplayTwoUp) == 0];
 }
 
 #pragma mark History
