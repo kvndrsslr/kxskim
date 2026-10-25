@@ -26,7 +26,9 @@ the pane color only for documents whose pages paint their own background — the
 except in that line, which it hides on dark panes — while documents with transparent page
 backgrounds keep PDFKit's white paper. An overlay repaints the outermost device pixels of every page
 edge with the page's own content, so the line also stays hidden between light pages, in every display
-mode.
+mode. One page cannot be papered differently from its document, because the page color is per view:
+in a document of full-bleed pages, a page that paints no background of its own — a blank filler
+page, say — shows that page color and reads as a dark sheet.
 
 ## Installation
 
