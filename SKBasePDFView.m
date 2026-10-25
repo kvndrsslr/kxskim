@@ -280,13 +280,91 @@ static inline NSArray *defaultKeysToObserve() {
     [self updatePageColor];
 }
 
-// PDFKit fills each page with its page color underneath the page content. Where the scaled page rect misses
+#define SKPageBackgroundSampleSize 32
+
+static void SKDrawPageIntoBackgroundSample(PDFPage *page, PDFDisplayBox box, NSBitmapImageRep *imageRep, CGFloat backdrop) {
+    NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:imageRep];
+    [NSGraphicsContext saveGraphicsState];
+    [NSGraphicsContext setCurrentContext:context];
+    CGContextRef ctxt = [context CGContext];
+    CGContextSetGrayFillColor(ctxt, backdrop, 1.0);
+    CGContextFillRect(ctxt, CGRectMake(0.0, 0.0, SKPageBackgroundSampleSize, SKPageBackgroundSampleSize));
+    NSRect bounds = [page boundsForBox:box];
+    CGContextScaleCTM(ctxt, SKPageBackgroundSampleSize / NSWidth(bounds), SKPageBackgroundSampleSize / NSHeight(bounds));
+    [page drawWithBox:box toContext:ctxt];
+    [NSGraphicsContext restoreGraphicsState];
+}
+
+// A page paints its own background when the ink at its edge is opaque: rendered over two different
+// backdrops, an opaque edge keeps its color while a transparent one follows the backdrop. Returns the
+// fraction of the outer band whose color does not follow the backdrop.
+static CGFloat SKPageEdgeInkCoverage(PDFPage *page, PDFDisplayBox box) {
+    const NSInteger size = SKPageBackgroundSampleSize;
+    const NSInteger inset = 6;      // outer band of the sample, matching the page edge region
+    NSRect bounds = [page boundsForBox:box];
+    if (NSIsEmptyRect(bounds))
+        return 0.0;
+    NSBitmapImageRep *blackRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:size pixelsHigh:size bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
+    NSBitmapImageRep *whiteRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:size pixelsHigh:size bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
+    if (blackRep == nil || whiteRep == nil)
+        return 0.0;
+    SKDrawPageIntoBackgroundSample(page, box, blackRep, 0.0);
+    SKDrawPageIntoBackgroundSample(page, box, whiteRep, 1.0);
+    unsigned char *blackData = [blackRep bitmapData];
+    unsigned char *whiteData = [whiteRep bitmapData];
+    NSInteger bytesPerRow = [blackRep bytesPerRow];
+    NSInteger inked = 0;
+    NSInteger ring = 0;
+    for (NSInteger y = 0; y < size; y++) {
+        for (NSInteger x = 0; x < size; x++) {
+            if (x >= inset && x < size - inset && y >= inset && y < size - inset)
+                continue;
+            unsigned char *b = blackData + y * bytesPerRow + x * 4;
+            unsigned char *w = whiteData + y * bytesPerRow + x * 4;
+            CGFloat blackLuminance = (0.2126 * b[0] + 0.7152 * b[1] + 0.0722 * b[2]) / 255.0;
+            CGFloat whiteLuminance = (0.2126 * w[0] + 0.7152 * w[1] + 0.0722 * w[2]) / 255.0;
+            if (fabs(blackLuminance - whiteLuminance) <= 0.1)
+                inked++;
+            ring++;
+        }
+    }
+    return ring > 0 ? (CGFloat)inked / (CGFloat)ring : 0.0;
+}
+
+// The page fill is view-global, so the document decides: only when most sampled pages paint their own
+// edge do we dare match the fill to a dark pane, because then the fill is never visible except in the
+// seam itself. The median of the sampled coverages keeps a stray blank page from flipping a document
+// whose remaining pages are full-bleed art.
+static BOOL SKDocumentPaintsOwnBackground(PDFDocument *document, PDFDisplayBox box) {
+    const NSUInteger sampleCount = 9;
+    NSUInteger count = [document pageCount];
+    if (count == 0)
+        return NO;
+    NSMutableIndexSet *sampled = [NSMutableIndexSet indexSet];
+    for (NSUInteger i = 0; i < sampleCount; i++)
+        [sampled addIndex:i * (count - 1) / (sampleCount - 1)];
+    NSMutableArray *coverages = [NSMutableArray array];
+    [sampled enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
+        PDFPage *page = [document pageAtIndex:index];
+        if (page == nil)
+            return;
+        [coverages addObject:@(SKPageEdgeInkCoverage(page, box))];
+    }];
+    if ([coverages count] == 0)
+        return NO;
+    NSArray *sortedCoverages = [coverages sortedArrayUsingSelector:@selector(compare:)];
+    return [[sortedCoverages objectAtIndex:([sortedCoverages count] - 1) / 2] doubleValue] >= 0.5;
+}
+
+// PDFKit fills the page rect with its page color underneath the page content. Where the scaled page rect misses
 // the device-pixel grid that fill antialiases into a 1px bright seam along the page edges, conspicuous on a
-// dark pane. Matching the fill to a dark pane background hides the seam; light panes keep the default white
-// paper, against which the seam never shows.
+// dark pane. Matching the fill to a dark pane background hides the seam, but it turns documents that rely on
+// the viewer's white paper black, so only documents whose pages paint their own background get the dark fill.
 - (void)updatePageColor {
     NSColor *color = [self backgroundColor];
-    [self setPageColor:[color luminance] < 0.5 ? color : nil];
+    BOOL dark = [color luminance] < 0.5 && [self document] != nil &&
+                SKDocumentPaintsOwnBackground([self document], [self displayBox]);
+    [self setPageColor:dark ? color : nil];
 }
 
 - (void)setBackgroundColor:(NSColor *)backgroundColor {
