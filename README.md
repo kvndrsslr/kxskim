@@ -19,10 +19,14 @@ page gap settings live in **Settings → General**; the page gap separates pages
 continuous modes, and in the two-up and book modes it only separates spreads, so the two pages of a
 spread touch. In horizontal continuous display mode
 the Contents pane's destinations keep the start of the target page clear of the pane, and a jump
-briefly highlights the destination. Page edges stay clean: on dark backgrounds the page fill follows
-the pane color, and an overlay repaints the outermost device pixels of every page edge with the
-page's own content, so PDFKit's 1px antialiasing line no longer shows on dark art pages or between
-light pages, in every display mode.
+briefly highlights the destination. Page edges stay clean: PDFKit fills every page rect with a
+view-global page color underneath the page content, and where the scaled page rect misses the
+device-pixel grid that fill shows as a 1px antialiasing line along the page edges. The fill follows
+the pane color only for documents whose pages paint their own background — then the fill never shows
+except in that line, which it hides on dark panes — while documents with transparent page
+backgrounds keep PDFKit's white paper. An overlay repaints the outermost device pixels of every page
+edge with the page's own content, so the line also stays hidden between light pages, in every display
+mode.
 
 ## Installation
 
@@ -46,8 +50,8 @@ The fork keeps upstream's bundle identifier on purpose, so `kxskim` conflicts wi
 - arm64, macOS 27 (Golden Gate) or later
 - ad-hoc signed; the Sparkle feed still points at upstream's appcast, so "Check for Updates" offers
   plain Skim and would replace this build
-- the current `Skim-1.7.17.1.dmg` (fork rebased onto upstream r16706, upstream trunk still reports
-  1.7.17) has `sha256 4dbb78204d684b46f9168dbf3ed53fe34bf57e52aa650adc4b5bf04e892d438a`
+- the current `Skim-1.7.17.3.dmg` (fork rebased onto upstream r16706, upstream trunk still reports
+  1.7.17) has `sha256 26b2bd3541ebd19d1b2185c1d7137d0e1b6c5d5d626090e6d0b39c418742e9b1`
 - the first `Skim-1.7.17.dmg` published had invalidated nested code signatures: the embedded
   frameworks are signed when copied in and the release build then stripped their headers, leaving
   seals that referenced files which no longer existed, so Gatekeeper reported `"Skim" is damaged and
