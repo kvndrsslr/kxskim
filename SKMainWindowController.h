@@ -206,6 +206,7 @@ extern NSNotificationName const SKMainWindowControllerDidShowOrHideOverviewNotif
 
 - (void)showSnapshotAtPage:(PDFPage *)page forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits;
 - (void)showSnapshotsWithSetups:(NSArray<NSDictionary<NSString *, id> *> *)setups;
+- (void)showSnapshotAtPage:(PDFPage *)page previewOnScreen:(nullable NSScreen *)screen;
 - (void)showNote:(PDFAnnotation *)annotation;
 
 - (nullable NSWindowController *)windowControllerForNote:(PDFAnnotation *)annotation;

@@ -181,32 +181,14 @@ static CGFloat fullScreenToolbarOffset = 0.0;
     return mainScreen;
 }
 
-- (void)showNotesForPresentationOnScreen:(NSScreen *)screen {
+- (PDFPage *)pageForPresentationNotes {
     NSDocument *notesDocument = [self presentationNotesDocument];
     PDFDocument *pdfDoc = [notesDocument pdfDocument];
     NSInteger offset = [self presentationNotesOffset];
     PDFPage *page = [pdfView currentPage];
-    
     if (notesDocument != [self document] || offset != 0)
         page = [pdfDoc pageAtIndex:MAX(0, MIN((NSInteger)[pdfDoc pageCount] - 1, (NSInteger)[page pageIndex] + offset))];
-    
-    if (presentationNotesAuxiliary == nil)
-        presentationNotesAuxiliary = [[SKPresentationNotesAuxiliary alloc] init];
-    
-    if (notesDocument == [self document]) {
-        SKSnapshotWindowController *preview = [[SKSnapshotWindowController alloc] init];
-        
-        [presentationNotesAuxiliary setPreviewController:preview];
-        
-        [preview setDelegate:self];
-        
-        [preview loadPdfDocument:pdfDoc];
-        [preview previewPage:page displayOnScreen:screen];
-    
-        [[self document] addWindowController:preview];
-    } else {
-        [notesDocument setCurrentPage:page];
-    }
+    return page;
 }
 
 - (void)handlePresentationViewPageChanged:(NSNotification *)notification {
@@ -219,13 +201,11 @@ static CGFloat fullScreenToolbarOffset = 0.0;
             [pdfView goToPage:page];
         }
         if ([self presentationNotesDocument]) {
-            PDFDocument *pdfDoc = [[self presentationNotesDocument] pdfDocument];
-            NSInteger offset = [self presentationNotesOffset];
-            NSUInteger pageIndex = (NSUInteger)MAX(0, MIN((NSInteger)[pdfDoc pageCount] - 1, (NSInteger)[[pdfView currentPage] pageIndex] + offset));
+            PDFPage *page = [self pageForPresentationNotes];
             if ([self presentationNotesDocument] == [self document])
-                [[[presentationNotesAuxiliary previewController] pdfView] goAndScrollToPage:[pdfDoc pageAtIndex:pageIndex]];
+                [[[presentationNotesAuxiliary previewController] pdfView] goAndScrollToPage:page];
             else
-                [[self presentationNotesDocument] setCurrentPage:[pdfDoc pageAtIndex:pageIndex]];
+                [[self presentationNotesDocument] setCurrentPage:page];
         }
     }
 }
@@ -285,9 +265,11 @@ static CGFloat fullScreenToolbarOffset = 0.0;
     interactionMode = SKPresentationMode;
     
     NSDocument *notesDocument = [self presentationNotesDocument];
-    NSScreen *notesScreen = (notesDocument && notesDocument != [self document]) ? [[notesDocument primaryWindow] screen] : nil;
+    NSScreen *screen = nil;
     BOOL preferExternal = [[NSUserDefaults standardUserDefaults] boolForKey:SKPreferExternalDisplayForPresentationKey];
-    NSScreen *screen = [self screenForPresentationWindowAvoidingScreen:notesScreen preferExternal:preferExternal];
+    if (notesDocument && notesDocument != [self document])
+        screen = [[notesDocument primaryWindow] screen];
+    screen = [self screenForPresentationWindowAvoidingScreen:screen preferExternal:preferExternal];
     
     NSWindow *presentationWindow = [[SKFullScreenWindow alloc] initWithContentRect:[screen frame]];
     [presentationWindow setAlphaValue:0.0];
@@ -305,9 +287,15 @@ static CGFloat fullScreenToolbarOffset = 0.0;
     [presentationWindow orderFront:nil];
     
     if (notesDocument) {
-        if (notesScreen == nil)
-            notesScreen = [self screenForPresentationWindowAvoidingScreen:screen preferExternal:NO];
-        [self showNotesForPresentationOnScreen:notesScreen];
+        if (presentationNotesAuxiliary == nil)
+            presentationNotesAuxiliary = [[SKPresentationNotesAuxiliary alloc] init];
+        PDFPage *page = [self pageForPresentationNotes];
+        if (notesDocument == [self document]) {
+            screen = [self screenForPresentationWindowAvoidingScreen:screen preferExternal:NO];
+            [self showSnapshotAtPage:page previewOnScreen:screen];
+        } else {
+            [notesDocument setCurrentPage:page];
+        }
     }
     
     BOOL shouldFadeOut = NO;

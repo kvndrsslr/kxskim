@@ -2462,6 +2462,17 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
     }];
 }
 
+- (void)showSnapshotAtPage:(PDFPage *)page previewOnScreen:(nullable NSScreen *)screen {
+    SKSnapshotWindowController *swc = [[SKSnapshotWindowController alloc] init];
+    
+    [swc setDelegate:self];
+    
+    [swc loadPdfDocument:[pdfView document]];
+    [swc previewPage:page displayOnScreen:screen];
+    
+    [[self document] addWindowController:swc];
+}
+
 - (void)snapshotController:(SKSnapshotWindowController *)controller didFinishSetup:(SKSnapshotOpenType)openType {
     if (openType == SKSnapshotOpenPreview)
         return;
