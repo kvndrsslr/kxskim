@@ -185,7 +185,10 @@ static CGFloat fullScreenToolbarOffset = 0.0;
     NSDocument *notesDocument = [self presentationNotesDocument];
     PDFDocument *pdfDoc = [notesDocument pdfDocument];
     NSInteger offset = [self presentationNotesOffset];
-    NSUInteger pageIndex = MAX(0, MIN((NSInteger)[pdfDoc pageCount] - 1, (NSInteger)[[pdfView currentPage] pageIndex] + offset));
+    PDFPage *page = [pdfView currentPage];
+    
+    if (notesDocument != [self document] || offset != 0)
+        page = [pdfDoc pageAtIndex:MAX(0, MIN((NSInteger)[pdfDoc pageCount] - 1, (NSInteger)[page pageIndex] + offset))];
     
     if (presentationNotesAuxiliary == nil)
         presentationNotesAuxiliary = [[SKPresentationNotesAuxiliary alloc] init];
@@ -197,11 +200,11 @@ static CGFloat fullScreenToolbarOffset = 0.0;
         
         [preview setDelegate:self];
         
-        [preview setPdfDocument:pdfDoc previewPageNumber:pageIndex displayOnScreen:screen];
+        [preview setPdfDocument:pdfDoc previewPage:page displayOnScreen:screen];
     
         [[self document] addWindowController:preview];
     } else {
-        [notesDocument setCurrentPage:[pdfDoc pageAtIndex:pageIndex]];
+        [notesDocument setCurrentPage:page];
     }
 }
 

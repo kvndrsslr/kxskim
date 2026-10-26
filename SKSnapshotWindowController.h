@@ -79,9 +79,9 @@ typedef NS_ENUM(NSInteger, SKSnapshotOpenType) {
 
 @property (nonatomic, readonly) NSAttributedString *thumbnailAttachment, *thumbnail512Attachment, *thumbnail256Attachment, *thumbnail128Attachment, *thumbnail64Attachment, *thumbnail32Attachment;
 
-- (void)setPdfDocument:(PDFDocument *)pdfDocument goToPageNumber:(NSInteger)pageNum rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits;
+- (void)setPdfDocument:(PDFDocument *)pdfDocument goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits;
 - (void)setPdfDocument:(PDFDocument *)pdfDocument setup:(NSDictionary<NSString *, id> *)setup;
-- (void)setPdfDocument:(PDFDocument *)pdfDocument previewPageNumber:(NSInteger)pageNum displayOnScreen:(nullable NSScreen *)screen;
+- (void)setPdfDocument:(PDFDocument *)pdfDocument previewPage:(PDFPage *)page displayOnScreen:(nullable NSScreen *)screen;
 
 - (BOOL)isPageVisible:(PDFPage *)page;
 - (BOOL)isPageInIndexesVisible:(NSIndexSet *)pageIndexes;

@@ -3042,8 +3042,8 @@ static inline CGFloat secondaryOutset(CGFloat x) {
         rect = [self convertRect:rect toPage:page];
     }
     
-    if ([[self delegate] respondsToSelector:@selector(PDFView:showSnapshotAtPageNumber:forRect:scaleFactor:autoFits:)])
-        [[self delegate] PDFView:self showSnapshotAtPageNumber:[page pageIndex] forRect:rect scaleFactor:[self scaleFactor] autoFits:autoFits];
+    if ([[self delegate] respondsToSelector:@selector(PDFView:showSnapshotAtPage:forRect:scaleFactor:autoFits:)])
+        [[self delegate] PDFView:self showSnapshotAtPage:page forRect:rect scaleFactor:[self scaleFactor] autoFits:autoFits];
 }
 
 #pragma mark Zooming
@@ -4828,8 +4828,8 @@ static inline NSCursor *resizeCursor(NSInteger angle, BOOL single) {
         
     }
     
-    if ([[self delegate] respondsToSelector:@selector(PDFView:showSnapshotAtPageNumber:forRect:scaleFactor:autoFits:)])
-        [[self delegate] PDFView:self showSnapshotAtPageNumber:[page pageIndex] forRect:rect scaleFactor:[self scaleFactor] * factor autoFits:autoFits];
+    if ([[self delegate] respondsToSelector:@selector(PDFView:showSnapshotAtPage:forRect:scaleFactor:autoFits:)])
+        [[self delegate] PDFView:self showSnapshotAtPage:page forRect:rect scaleFactor:[self scaleFactor] * factor autoFits:autoFits];
 }
 
 - (void)removeLoupeWindow {

@@ -204,7 +204,7 @@ extern NSNotificationName const SKMainWindowControllerDidShowOrHideOverviewNotif
 
 - (SKTransitionController *)transitionControllerCreating:(BOOL)create;
 
-- (void)showSnapshotAtPageNumber:(NSInteger)pageNum forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits;
+- (void)showSnapshotAtPage:(PDFPage *)page forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits;
 - (void)showSnapshotsWithSetups:(NSArray<NSDictionary<NSString *, id> *> *)setups;
 - (void)showNote:(PDFAnnotation *)annotation;
 

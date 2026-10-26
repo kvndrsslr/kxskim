@@ -122,7 +122,7 @@ enum {
 - (void)PDFViewDidBeginEditing:(PDFView *)pdfView;
 - (void)PDFViewDidEndEditing:(PDFView *)pdfView;
 - (void)PDFView:(PDFView *)pdfView editAnnotation:(PDFAnnotation *)annotation;
-- (void)PDFView:(PDFView *)pdfView showSnapshotAtPageNumber:(NSInteger)pageNum forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits;
+- (void)PDFView:(PDFView *)pdfView showSnapshotAtPage:(PDFPage *)page forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits;
 - (void)PDFViewPerformHideFind:(PDFView *)pdfView;
 - (BOOL)PDFView:(PDFView *)pdfView performAction:(PDFAction *)action;
 - (void)PDFView:(PDFView *)pdfView didRotatePageAtIndex:(NSUInteger)idx by:(NSInteger)rotation;

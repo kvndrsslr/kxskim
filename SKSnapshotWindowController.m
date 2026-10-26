@@ -283,7 +283,7 @@ static char SKSnaphotWindowDefaultsObservationContext;
     }
 }
 
-- (void)setPdfDocument:(PDFDocument *)pdfDocument goToPageNumber:(NSInteger)pageNum rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits screen:(NSScreen *)screen openType:(SKSnapshotOpenType)openType {
+- (void)setPdfDocument:(PDFDocument *)pdfDocument goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits screen:(NSScreen *)screen openType:(SKSnapshotOpenType)openType {
     NSWindow *window = [self window];
     
     [pdfView setScaleFactor:factor];
@@ -294,7 +294,6 @@ static char SKSnaphotWindowDefaultsObservationContext;
     [pdfView setBackgroundColor:[NSColor whiteColor]];
     [pdfView setDocument:pdfDocument];
     
-    PDFPage *page = [pdfDocument pageAtIndex:pageNum];
     NSRect frame = [pdfView convertRect:rect fromPage:page];
     CGFloat scrollerWidth = [NSScroller effectiveScrollerWidth];
     if (scrollerWidth > 0.0) {
@@ -339,9 +338,9 @@ static char SKSnaphotWindowDefaultsObservationContext;
     }
 }
 
-- (void)setPdfDocument:(PDFDocument *)pdfDocument goToPageNumber:(NSInteger)pageNum rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits {
+- (void)setPdfDocument:(PDFDocument *)pdfDocument goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits {
     [self setPdfDocument:pdfDocument
-          goToPageNumber:pageNum
+                goToPage:page
                     rect:rect
              scaleFactor:factor
                 autoFits:autoFits
@@ -349,10 +348,10 @@ static char SKSnaphotWindowDefaultsObservationContext;
                 openType:SKSnapshotOpenNormal];
 }
 
-- (void)setPdfDocument:(PDFDocument *)pdfDocument previewPageNumber:(NSInteger)pageNum displayOnScreen:(NSScreen *)screen {
+- (void)setPdfDocument:(PDFDocument *)pdfDocument previewPage:(PDFPage *)page displayOnScreen:(NSScreen *)screen {
     [self setPdfDocument:pdfDocument
-          goToPageNumber:pageNum
-                    rect:[[pdfDocument pageAtIndex:pageNum] boundsForBox:kPDFDisplayBoxCropBox]
+                goToPage:page
+                    rect:[page boundsForBox:kPDFDisplayBoxCropBox]
              scaleFactor:1.0
                 autoFits:YES
                   screen:screen
@@ -361,7 +360,7 @@ static char SKSnaphotWindowDefaultsObservationContext;
 
 - (void)setPdfDocument:(PDFDocument *)pdfDocument setup:(NSDictionary *)setup {
     [self setPdfDocument:pdfDocument
-          goToPageNumber:[[setup objectForKey:PAGE_KEY] unsignedIntegerValue]
+                goToPage:[pdfDocument pageAtIndex:[[setup objectForKey:PAGE_KEY] unsignedIntegerValue]]
                     rect:NSRectFromString([setup objectForKey:RECT_KEY])
              scaleFactor:[[setup objectForKey:SCALEFACTOR_KEY] doubleValue]
                 autoFits:[[setup objectForKey:AUTOFITS_KEY] boolValue]

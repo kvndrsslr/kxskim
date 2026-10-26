@@ -2434,13 +2434,13 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
 
 #pragma mark Subwindows
 
-- (void)showSnapshotAtPageNumber:(NSInteger)pageNum forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits {
+- (void)showSnapshotAtPage:(PDFPage *)page forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits {
     SKSnapshotWindowController *swc = [[SKSnapshotWindowController alloc] init];
     
     [swc setDelegate:self];
     
     [swc setPdfDocument:[pdfView document]
-         goToPageNumber:pageNum
+               goToPage:page
                    rect:rect
             scaleFactor:scaleFactor
                autoFits:autoFits];

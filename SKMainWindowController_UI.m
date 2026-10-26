@@ -573,7 +573,7 @@
         
         rect.origin.y = NSMidY(rect) - 0.5 * SNAPSHOT_HEIGHT;
         rect.size.height = SNAPSHOT_HEIGHT;
-        [self showSnapshotAtPageNumber:row forRect:rect scaleFactor:[pdfView scaleFactor] autoFits:NO];
+        [self showSnapshotAtPage:[[pdfView document] pageAtIndex:row] forRect:rect scaleFactor:[pdfView scaleFactor] autoFits:NO];
         return YES;
     }
     return NO;
@@ -1735,8 +1735,8 @@
     [self showNote:annotation];
 }
 
-- (void)PDFView:(PDFView *)aPDFView showSnapshotAtPageNumber:(NSInteger)pageNum forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits {
-    [self showSnapshotAtPageNumber:pageNum forRect:rect scaleFactor:scaleFactor autoFits:autoFits];
+- (void)PDFView:(PDFView *)aPDFView showSnapshotAtPage:(PDFPage *)page forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits {
+    [self showSnapshotAtPage:page forRect:rect scaleFactor:scaleFactor autoFits:autoFits];
 }
 
 - (void)PDFView:(PDFView *)aPDFView didRotatePageAtIndex:(NSUInteger)idx by:(NSInteger)rotation {
