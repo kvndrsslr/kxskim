@@ -13,12 +13,14 @@
 {
     CIImage     *inputImage;
     CIImage     *inputTargetImage;
+    CIVector    *inputExtent;
     NSNumber    *inputScale;
     NSNumber    *inputTime;
 }
 
 @property (nonatomic, strong) CIImage *inputImage;
 @property (nonatomic, strong) CIImage *inputTargetImage;
+@property (nonatomic, strong) CIVector *inputExtent;
 @property (nonatomic, strong) NSNumber *inputScale;
 @property (nonatomic, strong) NSNumber *inputTime;
 

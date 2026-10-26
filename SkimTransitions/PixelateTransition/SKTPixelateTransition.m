@@ -10,11 +10,16 @@
 
 @implementation SKTPixelateTransition
 
-@synthesize inputImage, inputTargetImage, inputScale, inputTime;
+@synthesize inputImage, inputTargetImage, inputExtent, inputScale, inputTime;
 
 + (NSDictionary *)customAttributes
 {
     return [NSDictionary dictionaryWithObjectsAndKeys:
+        
+        [NSDictionary dictionaryWithObjectsAndKeys:
+             [CIVector vectorWithX:0.0 Y:0.0 Z:300.0 W:300.0], kCIAttributeDefault,
+             kCIAttributeTypeRectangle,         kCIAttributeType,
+             nil],                              kCIInputExtentKey,
         
         [NSDictionary dictionaryWithObjectsAndKeys:
              [NSNumber numberWithDouble:  0.0], kCIAttributeMin,
@@ -49,7 +54,7 @@
     CGFloat t = [inputTime doubleValue];
     CGFloat t1 = fmin(fmax((2.0 * t - 0.5), 0.0), 1.0);
     CGFloat logScale = log2(fmax(1.0, [inputScale doubleValue] * (1.0 - fabs(2.0 * t - 1.0))));
-    CGRect extent = CGRectUnion([inputImage extent], [inputTargetImage extent]);
+    CGRect extent = CGRectMake([inputExtent X], [inputExtent Y], [inputExtent Z], [inputExtent W]);
     CIImage *image1;
     CIImage *image2;
     
