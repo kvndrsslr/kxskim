@@ -92,7 +92,7 @@ static char SKSnaphotWindowDefaultsObservationContext;
 @implementation SKSnapshotWindowController
 
 @synthesize pdfView, delegate, thumbnail, updateDate, pageLabel, string, hasWindow, forceOnTop;
-@dynamic bounds, pageIndex, pdfDocument, currentSetup, currentConfiguration, thumbnailAttachment, thumbnail512Attachment, thumbnail256Attachment, thumbnail128Attachment, thumbnail64Attachment, thumbnail32Attachment;
+@dynamic bounds, pageIndex, currentSetup, currentConfiguration, thumbnailAttachment, thumbnail512Attachment, thumbnail256Attachment, thumbnail128Attachment, thumbnail64Attachment, thumbnail32Attachment;
 
 - (NSString *)windowNibName {
     return @"SnapshotWindow";
@@ -289,6 +289,11 @@ static char SKSnaphotWindowDefaultsObservationContext;
     }
 }
 
+- (void)loadPdfDocument:(PDFDocument *)pdfDocument {
+    [self window];
+    [pdfView setDocument:pdfDocument];
+}
+
 - (void)goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits screen:(NSScreen *)screen openType:(SKSnapshotOpenType)openType {
     NSWindow *window = [self window];
     
@@ -338,7 +343,7 @@ static char SKSnaphotWindowDefaultsObservationContext;
     }
 }
 
-- (void)goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits {
+- (void)displayPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits {
     [self goToPage:page
               rect:rect
        scaleFactor:factor
@@ -356,7 +361,7 @@ static char SKSnaphotWindowDefaultsObservationContext;
           openType:SKSnapshotOpenPreview];
 }
 
-- (void)setCurrentSetup:(NSDictionary *)setup {
+- (void)displaySetup:(NSDictionary *)setup {
     [self goToPage:[[pdfView document] pageAtIndex:[[setup objectForKey:PAGE_KEY] unsignedIntegerValue]]
               rect:NSRectFromString([setup objectForKey:RECT_KEY])
        scaleFactor:[[setup objectForKey:SCALEFACTOR_KEY] doubleValue]
@@ -398,15 +403,6 @@ static char SKSnaphotWindowDefaultsObservationContext;
     forceOnTop = flag;
     if ([[self window] isVisible])
         [self updateWindowLevel];
-}
-
-- (PDFDocument *)pdfDocument {
-    return [pdfView document];
-}
-
-- (void)setPdfDocument:(PDFDocument *)pdfDocument {
-    [self window];
-    [pdfView setDocument:pdfDocument];
 }
 
 - (NSDictionary *)currentSetup {

@@ -73,15 +73,17 @@ typedef NS_ENUM(NSInteger, SKSnapshotOpenType) {
 @property (nonatomic, nullable, readonly) NSString *pageLabel;
 @property (nonatomic, nullable, readonly) NSString *string;
 @property (nonatomic, readonly) BOOL hasWindow;
-@property (nonatomic, nullable, strong) PDFDocument *pdfDocument;
-@property (nonatomic, copy) NSDictionary<NSString *, id> *currentSetup;
+@property (nonatomic, readonly) NSDictionary<NSString *, id> *currentSetup;
 @property (nonatomic) BOOL forceOnTop;
 @property (nonatomic, readonly) SKSnapshotConfiguration *currentConfiguration;
 
 @property (nonatomic, readonly) NSAttributedString *thumbnailAttachment, *thumbnail512Attachment, *thumbnail256Attachment, *thumbnail128Attachment, *thumbnail64Attachment, *thumbnail32Attachment;
 
-- (void)goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits;
+- (void)loadPdfDocument:(PDFDocument *)pdfDocument;
+
+- (void)displayPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits;
 - (void)previewPage:(PDFPage *)page displayOnScreen:(nullable NSScreen *)screen;
+- (void)displaySetup:(NSDictionary<NSString *, id> *)currentSetup;
 
 - (BOOL)isPageVisible:(PDFPage *)page;
 - (BOOL)isPageInIndexesVisible:(NSIndexSet *)pageIndexes;

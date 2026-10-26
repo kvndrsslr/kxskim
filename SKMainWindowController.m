@@ -2439,8 +2439,8 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
     
     [swc setDelegate:self];
     
-    [swc setPdfDocument:[pdfView document]];
-    [swc goToPage:page rect:rect scaleFactor:scaleFactor autoFits:autoFits];
+    [swc loadPdfDocument:[pdfView document]];
+    [swc displayPage:page rect:rect scaleFactor:scaleFactor autoFits:autoFits];
     
     [swc setForceOnTop:[self interactionMode] == SKFullScreenMode];
     
@@ -2453,8 +2453,8 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
         
         [swc setDelegate:self];
         
-        [swc setPdfDocument:[pdfView document]];
-        [swc setCurrentSetup:setup];
+        [swc loadPdfDocument:[pdfView document]];
+        [swc displaySetup:setup];
 
         [swc setForceOnTop:[self interactionMode] == SKFullScreenMode];
         

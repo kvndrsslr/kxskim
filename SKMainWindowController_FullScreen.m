@@ -200,7 +200,7 @@ static CGFloat fullScreenToolbarOffset = 0.0;
         
         [preview setDelegate:self];
         
-        [preview setPdfDocument:pdfDoc];
+        [preview loadPdfDocument:pdfDoc];
         [preview previewPage:page displayOnScreen:screen];
     
         [[self document] addWindowController:preview];
