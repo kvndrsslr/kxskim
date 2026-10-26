@@ -201,12 +201,13 @@ static CGFloat fullScreenToolbarOffset = 0.0;
                 [pdfView setExtendedDisplayMode:kPDFDisplaySinglePage];
             [pdfView goToPage:page];
         }
-        if ([self presentationNotesDocument]) {
+        NSDocument *notesDocument = [self presentationNotesDocument];
+        if (notesDocument) {
             PDFPage *page = [self pageForPresentationNotes];
-            if ([self presentationNotesDocument] == [self document])
+            if (notesDocument == [self document])
                 [[[presentationNotesAuxiliary previewController] pdfView] goAndScrollToPage:page];
             else
-                [[self presentationNotesDocument] setCurrentPage:page];
+                [notesDocument setCurrentPage:page];
         }
     }
 }
