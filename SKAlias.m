@@ -143,7 +143,7 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
         shouldUpdate = YES;
     } else if (data) {
         NSURLBookmarkResolutionOptions options = allowUI ? 0 : NSURLBookmarkResolutionWithoutUI | NSURLBookmarkResolutionWithoutMounting;
-        fileURL = [NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:allowUI ? &shouldUpdate : NULL error:NULL];
+        fileURL = [NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
     }
     if (shouldUpdate && fileURL) {
         NSData *bmData = [fileURL bookmarkDataWithOptions:0 includingResourceValuesForKeys:nil relativeToURL:nil error:NULL];
