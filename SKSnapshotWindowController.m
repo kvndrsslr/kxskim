@@ -318,7 +318,7 @@ static char SKSnaphotWindowDefaultsObservationContext;
         [(SKSnapshotWindow *)[self window] setWindowControllerMiniaturizesWindow:NO];
     }
     
-    [[self window] setFrame:NSIntegralRect(frame) display:NO animate:NO];
+    [window setFrame:NSIntegralRect(frame) display:NO animate:NO];
     [pdfView goAndScrollToPage:page];
     
     if (autoFits) {
