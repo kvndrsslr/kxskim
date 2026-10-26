@@ -2465,6 +2465,8 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
 - (void)showSnapshotAtPage:(PDFPage *)page previewOnScreen:(nullable NSScreen *)screen {
     SKSnapshotWindowController *swc = [[SKSnapshotWindowController alloc] init];
     
+    [presentationNotesAuxiliary setPreviewController:swc];
+    
     [swc setDelegate:self];
     
     [swc loadPdfDocument:[pdfView document]];
