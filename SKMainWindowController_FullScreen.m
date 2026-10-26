@@ -183,11 +183,12 @@ static CGFloat fullScreenToolbarOffset = 0.0;
 
 - (PDFPage *)pageForPresentationNotes {
     NSDocument *notesDocument = [self presentationNotesDocument];
-    PDFDocument *pdfDoc = [notesDocument pdfDocument];
     NSInteger offset = [self presentationNotesOffset];
     PDFPage *page = [pdfView currentPage];
-    if (notesDocument != [self document] || offset != 0)
+    if (notesDocument != [self document] || offset != 0) {
+        PDFDocument *pdfDoc = [notesDocument pdfDocument];
         page = [pdfDoc pageAtIndex:MAX(0, MIN((NSInteger)[pdfDoc pageCount] - 1, (NSInteger)[page pageIndex] + offset))];
+    }
     return page;
 }
 
