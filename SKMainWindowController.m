@@ -2462,7 +2462,7 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
     }];
 }
 
-- (void)showSnapshotAtPage:(PDFPage *)page previewOnScreen:(nullable NSScreen *)screen {
+- (void)showSnapshotAtPage:(PDFPage *)page previewOnScreen:(NSScreen *)screen {
     SKSnapshotWindowController *swc = [[SKSnapshotWindowController alloc] init];
     
     [presentationNotesAuxiliary setPreviewController:swc];
