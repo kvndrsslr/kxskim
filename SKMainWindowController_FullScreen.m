@@ -203,7 +203,7 @@ static CGFloat fullScreenToolbarOffset = 0.0;
         }
         NSDocument *notesDocument = [self presentationNotesDocument];
         if (notesDocument) {
-            PDFPage *page = [self pageForPresentationNotes];
+            page = [self pageForPresentationNotes];
             if (notesDocument == [self document])
                 [[[presentationNotesAuxiliary previewController] pdfView] goAndScrollToPage:page];
             else
