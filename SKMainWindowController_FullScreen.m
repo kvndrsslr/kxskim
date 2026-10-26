@@ -200,7 +200,8 @@ static CGFloat fullScreenToolbarOffset = 0.0;
         
         [preview setDelegate:self];
         
-        [preview setPdfDocument:pdfDoc previewPage:page displayOnScreen:screen];
+        [preview setPdfDocument:pdfDoc];
+        [preview previewPage:page displayOnScreen:screen];
     
         [[self document] addWindowController:preview];
     } else {

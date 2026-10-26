@@ -92,7 +92,7 @@ static char SKSnaphotWindowDefaultsObservationContext;
 @implementation SKSnapshotWindowController
 
 @synthesize pdfView, delegate, thumbnail, updateDate, pageLabel, string, hasWindow, forceOnTop;
-@dynamic bounds, pageIndex, currentSetup, currentConfiguration, thumbnailAttachment, thumbnail512Attachment, thumbnail256Attachment, thumbnail128Attachment, thumbnail64Attachment, thumbnail32Attachment;
+@dynamic bounds, pageIndex, pdfDocument, currentSetup, currentConfiguration, thumbnailAttachment, thumbnail512Attachment, thumbnail256Attachment, thumbnail128Attachment, thumbnail64Attachment, thumbnail32Attachment;
 
 - (NSString *)windowNibName {
     return @"SnapshotWindow";
@@ -112,6 +112,12 @@ static char SKSnaphotWindowDefaultsObservationContext;
     [sud addObserver:self forKeyPath:SKInterpolationQualityKey options:0 context:&SKSnaphotWindowDefaultsObservationContext];
     // the window is initialially exposed. The windowDidExpose notification is useless, it has nothing to do with showing the window
     [self setHasWindow:YES];
+    [pdfView setScaleFactor:1.0];
+    [pdfView setAutoScales:NO];
+    [pdfView setDisplaysPageBreaks:NO];
+    [pdfView setDisplayBox:kPDFDisplayBoxCropBox];
+    [pdfView setInterpolationQuality:[[NSUserDefaults standardUserDefaults] integerForKey:SKInterpolationQualityKey]];
+    [pdfView setBackgroundColor:[NSColor whiteColor]];
 }
 
 // these should never be reached, but just to be sure
@@ -283,16 +289,10 @@ static char SKSnaphotWindowDefaultsObservationContext;
     }
 }
 
-- (void)setPdfDocument:(PDFDocument *)pdfDocument goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits screen:(NSScreen *)screen openType:(SKSnapshotOpenType)openType {
+- (void)goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits screen:(NSScreen *)screen openType:(SKSnapshotOpenType)openType {
     NSWindow *window = [self window];
     
     [pdfView setScaleFactor:factor];
-    [pdfView setAutoScales:NO];
-    [pdfView setDisplaysPageBreaks:NO];
-    [pdfView setDisplayBox:kPDFDisplayBoxCropBox];
-    [pdfView setInterpolationQuality:[[NSUserDefaults standardUserDefaults] integerForKey:SKInterpolationQualityKey]];
-    [pdfView setBackgroundColor:[NSColor whiteColor]];
-    [pdfView setDocument:pdfDocument];
     
     NSRect frame = [pdfView convertRect:rect fromPage:page];
     CGFloat scrollerWidth = [NSScroller effectiveScrollerWidth];
@@ -338,34 +338,31 @@ static char SKSnaphotWindowDefaultsObservationContext;
     }
 }
 
-- (void)setPdfDocument:(PDFDocument *)pdfDocument goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits {
-    [self setPdfDocument:pdfDocument
-                goToPage:page
-                    rect:rect
-             scaleFactor:factor
-                autoFits:autoFits
-                  screen:nil
-                openType:SKSnapshotOpenNormal];
+- (void)goToPage:(PDFPage *)page rect:(NSRect)rect scaleFactor:(CGFloat)factor autoFits:(BOOL)autoFits {
+    [self goToPage:page
+              rect:rect
+       scaleFactor:factor
+          autoFits:autoFits
+            screen:nil
+          openType:SKSnapshotOpenNormal];
 }
 
-- (void)setPdfDocument:(PDFDocument *)pdfDocument previewPage:(PDFPage *)page displayOnScreen:(NSScreen *)screen {
-    [self setPdfDocument:pdfDocument
-                goToPage:page
-                    rect:[page boundsForBox:kPDFDisplayBoxCropBox]
-             scaleFactor:1.0
-                autoFits:YES
-                  screen:screen
-                openType:SKSnapshotOpenPreview];
+- (void)previewPage:(PDFPage *)page displayOnScreen:(NSScreen *)screen {
+    [self goToPage:page
+              rect:[page boundsForBox:kPDFDisplayBoxCropBox]
+       scaleFactor:1.0
+          autoFits:YES
+            screen:screen
+          openType:SKSnapshotOpenPreview];
 }
 
-- (void)setPdfDocument:(PDFDocument *)pdfDocument setup:(NSDictionary *)setup {
-    [self setPdfDocument:pdfDocument
-                goToPage:[pdfDocument pageAtIndex:[[setup objectForKey:PAGE_KEY] unsignedIntegerValue]]
-                    rect:NSRectFromString([setup objectForKey:RECT_KEY])
-             scaleFactor:[[setup objectForKey:SCALEFACTOR_KEY] doubleValue]
-                autoFits:[[setup objectForKey:AUTOFITS_KEY] boolValue]
-                  screen:nil
-                openType:SKSnapshotOpenFromSetup];
+- (void)setCurrentSetup:(NSDictionary *)setup {
+    [self goToPage:[[pdfView document] pageAtIndex:[[setup objectForKey:PAGE_KEY] unsignedIntegerValue]]
+              rect:NSRectFromString([setup objectForKey:RECT_KEY])
+       scaleFactor:[[setup objectForKey:SCALEFACTOR_KEY] doubleValue]
+          autoFits:[[setup objectForKey:AUTOFITS_KEY] boolValue]
+            screen:nil
+          openType:SKSnapshotOpenFromSetup];
     
     [self setHasWindow:[[setup objectForKey:HASWINDOW_KEY] boolValue]];
     if ([setup objectForKey:WINDOWFRAME_KEY])
@@ -401,6 +398,15 @@ static char SKSnaphotWindowDefaultsObservationContext;
     forceOnTop = flag;
     if ([[self window] isVisible])
         [self updateWindowLevel];
+}
+
+- (PDFDocument *)pdfDocument {
+    return [pdfView document];
+}
+
+- (void)setPdfDocument:(PDFDocument *)pdfDocument {
+    [self window];
+    [pdfView setDocument:pdfDocument];
 }
 
 - (NSDictionary *)currentSetup {
