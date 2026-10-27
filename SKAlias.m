@@ -37,6 +37,7 @@
  */
 
 #import "SKAlias.h"
+#import "NSString_SKExtensions.h"
 
 
 @implementation SKAlias
@@ -142,8 +143,18 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
         fileURL = fileURLFromAliasHandle(aliasHandle, allowUI ? 0 : kResolveAliasFileNoUI);
         shouldUpdate = YES;
     } else if (data) {
-        NSURLBookmarkResolutionOptions options = allowUI ? 0 : NSURLBookmarkResolutionWithoutUI | NSURLBookmarkResolutionWithoutMounting;
-        fileURL = [NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
+        if (allowUI == NO) {
+            NSString *path = [[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey];
+            if (path) {
+                fileURL = [NSURL fileURLWithPath:path isDirectory:[[path pathExtension] isCaseInsensitiveEqual:@"pdfd"]];
+                if ([fileURL checkResourceIsReachableAndReturnError:NULL] == NO)
+                    fileURL = nil;
+            }
+        }
+        if (fileURL == nil) {
+            NSURLBookmarkResolutionOptions options = allowUI ? 0 : NSURLBookmarkResolutionWithoutUI | NSURLBookmarkResolutionWithoutMounting;
+            fileURL = [NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
+        }
     }
     if (shouldUpdate && fileURL) {
         NSData *bmData = [fileURL bookmarkDataWithOptions:0 includingResourceValuesForKeys:nil relativeToURL:nil error:NULL];
