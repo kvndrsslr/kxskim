@@ -48,6 +48,8 @@ typedef NS_ENUM(NSInteger, SKBookmarkType) {
     SKBookmarkTypeSeparator
 };
 
+@class SKAlias;
+
 @interface SKBookmark : NSObject <NSCopying, QLPreviewItem> {
     __weak SKBookmark *parent;
 }
@@ -102,6 +104,8 @@ typedef NS_ENUM(NSInteger, SKBookmarkType) {
 - (BOOL)isDescendantOfArray:(NSArray<SKBookmark *> *)bookmarks;
 
 @property (nonatomic, nullable, readonly) NSURL *skimURL;
+
+- (BOOL)hasFileURL:(NSURL *)fileURL;
 
 @end
 

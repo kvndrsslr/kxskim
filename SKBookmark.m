@@ -317,6 +317,8 @@ static Class SKBookmarkClass = Nil;
     return url;
 }
 
+- (BOOL)hasFileURL:(NSURL *)fileURL { return NO; }
+
 @end
 
 #pragma mark -
@@ -607,6 +609,10 @@ static Class SKBookmarkClass = Nil;
 
 - (NSArray *)containingBookmarks {
     return @[self];
+}
+
+- (BOOL)hasFileURL:(NSURL *)fileURL {
+    return [alias matchesFileURL:fileURL];
 }
 
 @end

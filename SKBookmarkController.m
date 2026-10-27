@@ -257,9 +257,8 @@ static NSUInteger maxRecentDocumentsCount = 0;
 #pragma mark Recent Documents
 
 - (SKBookmark *)recentDocumentAtURL:(NSURL *)fileURL {
-    NSString *path = [fileURL path];
     for (SKBookmark *info in recentDocuments) {
-        if ([[[info fileURL] path] isCaseInsensitiveEqual:path])
+        if ([info hasFileURL:fileURL])
             return info;
     }
     return nil;
