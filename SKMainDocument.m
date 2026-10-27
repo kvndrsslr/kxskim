@@ -630,7 +630,7 @@ enum {
             if ([ourExtensions containsObject:[[url pathExtension] lowercaseString]] == NO) {
                 if (tmpURL == nil)
                     tmpURL = [fm URLForDirectory:NSItemReplacementDirectory inDomain:NSUserDomainMask appropriateForURL:fileURL create:YES error:NULL];
-                [fm copyItemAtURL:url toURL:[tmpURL URLByAppendingPathComponent:[url lastPathComponent] isDirectory:NO] error:NULL];
+                [fm copyItemAtURL:url toURL:[tmpURL URLByAppendingPathComponent:[url lastPathComponent] isDirectory:[[url absoluteString] hasSuffix:@"/"]] error:NULL];
             }
         }
     }
@@ -669,7 +669,7 @@ enum {
             // move extra package content like version info to the new location
             NSFileManager *fm = [NSFileManager defaultManager];
             for (NSURL *url in [fm contentsOfDirectoryAtURL:tmpURL includingPropertiesForKeys:@[] options:0 error:NULL])
-                [fm moveItemAtURL:url toURL:[absoluteURL URLByAppendingPathComponent:[url lastPathComponent] isDirectory:NO] error:NULL];
+                [fm moveItemAtURL:url toURL:[absoluteURL URLByAppendingPathComponent:[url lastPathComponent] isDirectory:[[url absoluteString] hasSuffix:@"/"]] error:NULL];
         }
     } else if ([attributes count]) {
         [attributes enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop){

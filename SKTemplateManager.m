@@ -123,7 +123,7 @@
         return nil;
     
     for (NSURL *appSupportURL in [[fm applicationSupportDirectoryURLs] arrayByAddingObject:[[NSBundle mainBundle] sharedSupportURL]]) {
-        url = [[appSupportURL URLByAppendingPathComponent:TEMPLATES_DIRECTORY isDirectory:YES] URLByAppendingPathComponent:file isDirectory:NO];
+        url = [[appSupportURL URLByAppendingPathComponent:TEMPLATES_DIRECTORY isDirectory:YES] URLByAppendingPathComponent:file isDirectory:[[file pathExtension] isCaseInsensitiveEqual:@"rtfd"]];
         if ([url checkResourceIsReachableAndReturnError:NULL] == NO)
             url = nil;
         else break;
