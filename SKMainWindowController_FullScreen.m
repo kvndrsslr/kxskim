@@ -294,7 +294,8 @@ static CGFloat fullScreenToolbarOffset = 0.0;
         PDFPage *page = [self pageForPresentationNotes];
         if (notesDocument == [self document]) {
             screen = [self screenForPresentationWindowAvoidingScreen:screen preferExternal:NO];
-            [self showSnapshotAtPage:page previewOnScreen:screen];
+            SKSnapshotWindowController *preview = [self makeSnapshot];
+            [preview previewPage:page displayOnScreen:screen];
         } else {
             [notesDocument setCurrentPage:page];
         }

@@ -573,7 +573,8 @@
         
         rect.origin.y = NSMidY(rect) - 0.5 * SNAPSHOT_HEIGHT;
         rect.size.height = SNAPSHOT_HEIGHT;
-        [self showSnapshotAtPage:[[pdfView document] pageAtIndex:row] forRect:rect scaleFactor:[pdfView scaleFactor] autoFits:NO];
+        SKSnapshotWindowController *swc = [self makeSnapshot];
+        [swc displayPage:[[pdfView document] pageAtIndex:row] rect:rect scaleFactor:[pdfView scaleFactor] autoFits:NO];
         return YES;
     }
     return NO;
@@ -1736,7 +1737,8 @@
 }
 
 - (void)PDFView:(PDFView *)aPDFView showSnapshotAtPage:(PDFPage *)page forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits {
-    [self showSnapshotAtPage:page forRect:rect scaleFactor:scaleFactor autoFits:autoFits];
+    SKSnapshotWindowController *swc = [self makeSnapshot];
+    [swc displayPage:page rect:rect scaleFactor:scaleFactor autoFits:autoFits];
 }
 
 - (void)PDFView:(PDFView *)aPDFView didRotatePageAtIndex:(NSUInteger)idx by:(NSInteger)rotation {

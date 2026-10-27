@@ -2434,45 +2434,25 @@ static NSArray *mergedSnapshotSetups(NSArray *setups1, NSArray *setups2);
 
 #pragma mark Subwindows
 
-- (void)showSnapshotAtPage:(PDFPage *)page forRect:(NSRect)rect scaleFactor:(CGFloat)scaleFactor autoFits:(BOOL)autoFits {
+- (SKSnapshotWindowController *)makeSnapshot {
     SKSnapshotWindowController *swc = [[SKSnapshotWindowController alloc] init];
     
     [swc setDelegate:self];
     
     [swc loadPdfDocument:[pdfView document]];
-    [swc displayPage:page rect:rect scaleFactor:scaleFactor autoFits:autoFits];
     
     [swc setForceOnTop:[self interactionMode] == SKFullScreenMode];
     
     [[self document] addWindowController:swc];
+    
+    return swc;
 }
 
 - (void)showSnapshotsWithSetups:(NSArray *)setups {
     [setups enumerateObjectsUsingBlock:^(NSDictionary *setup, NSUInteger i, BOOL *stop){
-        SKSnapshotWindowController *swc = [[SKSnapshotWindowController alloc] init];
-        
-        [swc setDelegate:self];
-        
-        [swc loadPdfDocument:[pdfView document]];
+        SKSnapshotWindowController *swc = [self makeSnapshot];
         [swc displaySetup:setup];
-
-        [swc setForceOnTop:[self interactionMode] == SKFullScreenMode];
-        
-        [[self document] addWindowController:swc];
     }];
-}
-
-- (void)showSnapshotAtPage:(PDFPage *)page previewOnScreen:(NSScreen *)screen {
-    SKSnapshotWindowController *swc = [[SKSnapshotWindowController alloc] init];
-    
-    [presentationNotesAuxiliary setPreviewController:swc];
-    
-    [swc setDelegate:self];
-    
-    [swc loadPdfDocument:[pdfView document]];
-    [swc previewPage:page displayOnScreen:screen];
-    
-    [[self document] addWindowController:swc];
 }
 
 - (void)snapshotController:(SKSnapshotWindowController *)controller didFinishSetup:(SKSnapshotOpenType)openType {
