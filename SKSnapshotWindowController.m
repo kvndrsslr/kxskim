@@ -352,7 +352,7 @@ static char SKSnaphotWindowDefaultsObservationContext;
           openType:SKSnapshotOpenNormal];
 }
 
-- (void)previewPage:(PDFPage *)page displayOnScreen:(NSScreen *)screen {
+- (void)displayPage:(PDFPage *)page previewOnScreen:(NSScreen *)screen {
     [self goToPage:page
               rect:[page boundsForBox:kPDFDisplayBoxCropBox]
        scaleFactor:1.0
