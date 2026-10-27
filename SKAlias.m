@@ -176,29 +176,33 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
 }
 
 - (BOOL)matchesFileURL:(NSURL *)fileURL {
-    if (aliasHandle == NULL && data) {
-        NSDictionary *dict1 = [fileURL resourceValuesForKeys:@[NSURLPathKey, @"_NSURLFileIDKey", NSURLVolumeIdentifierKey] error:NULL];
-        NSDictionary *dict2 = [NSURL resourceValuesForKeys:@[NSURLPathKey, @"_NSURLFileIDKey", NSURLVolumeIdentifierKey] fromBookmarkData:data];
-        NSString *path1 = [dict1 objectForKey:NSURLPathKey];
-        NSString *path2 = [dict2 objectForKey:NSURLPathKey];
-        if (path1 && path2) {
-            if ([path1 isCaseInsensitiveEqual:path2])
+    if (aliasHandle) {
+        return [[fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI) path] isCaseInsensitiveEqual:[fileURL path]];
+    } else if (data) {
+        NSDictionary *dict = [fileURL resourceValuesForKeys:@[NSURLPathKey, @"_NSURLFileIDKey", NSURLVolumeIdentifierKey] error:NULL];
+        NSDictionary *myDict = [NSURL resourceValuesForKeys:@[NSURLPathKey, @"_NSURLFileIDKey", NSURLVolumeIdentifierKey] fromBookmarkData:data];
+        NSString *path = [dict objectForKey:NSURLPathKey];
+        NSString *myPath = [myDict objectForKey:NSURLPathKey];
+        if (path && myDict) {
+            if ([path isCaseInsensitiveEqual:myPath])
                 return YES;
-            if ([[NSURL fileURLWithPath:path2 isDirectory:[[path2 pathExtension] isCaseInsensitiveEqual:@"pdfd"]] checkResourceIsReachableAndReturnError:NULL])
+            if ([[NSURL fileURLWithPath:myPath isDirectory:[[myPath pathExtension] isCaseInsensitiveEqual:@"pdfd"]] checkResourceIsReachableAndReturnError:NULL])
                 return NO;
-            NSNumber *fileID1 = [dict1 objectForKey:@"_NSURLFileIDKey"];
-            NSNumber *fileID2 = [dict2 objectForKey:@"_NSURLFileIDKey"];
-            if (fileID1 && fileID2) {
-                if ([fileID1 isEqual:fileID2] == NO)
+            NSNumber *fileID = [dict objectForKey:@"_NSURLFileIDKey"];
+            NSNumber *myFileID = [myDict objectForKey:@"_NSURLFileIDKey"];
+            if (fileID && myFileID) {
+                if ([fileID isEqual:myFileID] == NO)
                     return NO;
-                NSString *volumeID1 = [dict1 objectForKey:NSURLVolumeIdentifierKey];
-                NSString *volumeID2 = [dict2 objectForKey:NSURLVolumeIdentifierKey];
-                if (volumeID1 && volumeID2)
-                    return [volumeID1 isEqualToString:volumeID2];
+                NSString *volumeID = [dict objectForKey:NSURLVolumeIdentifierKey];
+                NSString *myVolumeID = [myDict objectForKey:NSURLVolumeIdentifierKey];
+                if (volumeID && myVolumeID)
+                    return [volumeID isEqualToString:myVolumeID];
             }
         }
+        NSURLBookmarkResolutionOptions options = NSURLBookmarkResolutionWithoutUI | NSURLBookmarkResolutionWithoutMounting;
+        return [[[NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:NULL error:NULL] path] isCaseInsensitiveEqual:(path ?: [fileURL path])];
     }
-    return [[[self fileURLNoUI] path] isCaseInsensitiveEqual:[fileURL path]];
+    return NO;
 }
 
 @end
