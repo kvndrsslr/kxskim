@@ -183,7 +183,7 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
         NSDictionary *myDict = [NSURL resourceValuesForKeys:@[NSURLPathKey, @"_NSURLFileIDKey", NSURLVolumeIdentifierKey] fromBookmarkData:data];
         NSString *path = [dict objectForKey:NSURLPathKey];
         NSString *myPath = [myDict objectForKey:NSURLPathKey];
-        if (path && myDict) {
+        if (path && myPath) {
             if ([path isCaseInsensitiveEqual:myPath])
                 return YES;
             if ([[NSURL fileURLWithPath:myPath isDirectory:[[myPath pathExtension] isCaseInsensitiveEqual:@"pdfd"]] checkResourceIsReachableAndReturnError:NULL])
