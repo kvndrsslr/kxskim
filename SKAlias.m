@@ -136,6 +136,15 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
     return aliasHandle == nil && data != nil;
 }
 
+- (void)updateWithURL:(NSURL *)fileURL {
+    NSData *bmData = [fileURL bookmarkDataWithOptions:0 includingResourceValuesForKeys:nil relativeToURL:nil error:NULL];
+    if (bmData) {
+        if (aliasHandle)
+            disposeAliasHandle(aliasHandle);
+        data = bmData;
+    }
+}
+
 - (NSURL *)fileURLAllowingUI:(BOOL)allowUI {
     // we could cache the fileURL, but it would break when moving the file while we run
     NSURL *fileURL = nil;
@@ -157,14 +166,8 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
             fileURL = [NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
         }
     }
-    if (shouldUpdate && fileURL) {
-        NSData *bmData = [fileURL bookmarkDataWithOptions:0 includingResourceValuesForKeys:nil relativeToURL:nil error:NULL];
-        if (bmData) {
-            if (aliasHandle)
-                disposeAliasHandle(aliasHandle);
-            data = bmData;
-        }
-    }
+    if (shouldUpdate && fileURL)
+        [self updateWithURL:fileURL];
     return fileURL;
 }
 
@@ -185,19 +188,30 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
         NSString *path = [dict objectForKey:NSURLPathKey];
         NSString *myPath = [myDict objectForKey:NSURLPathKey];
         if (path && myPath) {
-            if ([path isCaseInsensitiveEqual:myPath])
-                return YES;
-            if ([[NSURL fileURLWithPath:myPath isDirectory:[[myPath pathExtension] isCaseInsensitiveEqual:@"pdfd"]] checkResourceIsReachableAndReturnError:NULL])
-                return NO;
             NSNumber *fileID = [dict objectForKey:NSURLFileIDKey];
             NSNumber *myFileID = [myDict objectForKey:NSURLFileIDKey];
+            if ([path isCaseInsensitiveEqual:myPath]) {
+                if (fileID && myFileID && [fileID isEqual:myFileID] == NO)
+                    [self updateWithURL:fileURL];
+                return YES;
+            }
+            NSURL *myFileURL = [NSURL fileURLWithPath:myPath isDirectory:[[myPath pathExtension] isCaseInsensitiveEqual:@"pdfd"]];
+            if ([myFileURL checkResourceIsReachableAndReturnError:NULL]) {
+                if (fileID && myFileID && [fileID isEqual:myFileID] == NO)
+                    [self updateWithURL:myFileURL];
+                return NO;
+            }
             if (fileID && myFileID) {
                 if ([fileID isEqual:myFileID] == NO)
                     return NO;
                 NSString *volumeID = [dict objectForKey:NSURLVolumeIdentifierKey];
                 NSString *myVolumeID = [myDict objectForKey:NSURLVolumeIdentifierKey];
-                if (volumeID && myVolumeID)
-                    return [volumeID isEqualToString:myVolumeID];
+                if ([volumeID isEqualToString:myVolumeID]) {
+                    [self updateWithURL:fileURL];
+                    return YES;
+                } else if (volumeID && myVolumeID) {
+                    return NO;
+                }
             }
         }
         NSURLBookmarkResolutionOptions options = NSURLBookmarkResolutionWithoutUI | NSURLBookmarkResolutionWithoutMounting;
