@@ -179,7 +179,7 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
     return [self fileURLAllowingUI:NO];
 }
 
-- (BOOL)matchesFileURL:(NSURL *)fileURL {
+- (BOOL)resolvesToFileURL:(NSURL *)fileURL {
     if (aliasHandle) {
         return [[fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI) path] isCaseInsensitiveEqual:[fileURL path]];
     } else if (data) {

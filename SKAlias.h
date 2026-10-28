@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE;
 
 // this is like [[self fileURLNoUI] isEqual:fileURL] but more efficient, assumes fileURL exists
-- (BOOL)matchesFileURL:(NSURL *)fileURL;
+- (BOOL)resolvesToFileURL:(NSURL *)fileURL;
 
 @end
 

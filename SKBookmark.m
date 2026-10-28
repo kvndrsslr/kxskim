@@ -612,7 +612,7 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (BOOL)hasFileURL:(NSURL *)fileURL {
-    return [alias matchesFileURL:fileURL];
+    return [alias resolvesToFileURL:fileURL];
 }
 
 @end
