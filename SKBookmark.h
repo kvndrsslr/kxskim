@@ -75,7 +75,6 @@ typedef NS_ENUM(NSInteger, SKBookmarkType) {
 @property (nonatomic, nullable, readonly) NSString *toolTip;
 @property (nonatomic) NSUInteger pageIndex;
 @property (nonatomic, nullable, strong) NSNumber *pageNumber;
-@property (nonatomic, readonly) BOOL hasSetup;
 @property (nonatomic, nullable, readonly) NSDictionary<NSString *, id> *setup;
 @property (nonatomic, nullable, readonly) NSArray<NSDictionary<NSString *, id> *> *snapshots;
 @property (nonatomic, nullable, readonly) NSString *tabs;
