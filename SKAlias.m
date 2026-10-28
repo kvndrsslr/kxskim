@@ -183,8 +183,8 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
     if (aliasHandle) {
         return [[fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI) path] isCaseInsensitiveEqual:[fileURL path]];
     } else if (data) {
-        NSDictionary *dict = [fileURL resourceValuesForKeys:@[NSURLPathKey, NSURLFileIDKey, NSURLVolumeIdentifierKey] error:NULL];
-        NSDictionary *myDict = [NSURL resourceValuesForKeys:@[NSURLPathKey, NSURLFileIDKey, NSURLVolumeIdentifierKey] fromBookmarkData:data];
+        NSDictionary *dict = [fileURL resourceValuesForKeys:@[NSURLPathKey, NSURLFileIDKey, NSURLVolumeUUIDStringKey] error:NULL];
+        NSDictionary *myDict = [NSURL resourceValuesForKeys:@[NSURLPathKey, NSURLFileIDKey, NSURLVolumeUUIDStringKey] fromBookmarkData:data];
         NSString *path = [dict objectForKey:NSURLPathKey];
         NSString *myPath = [myDict objectForKey:NSURLPathKey];
         if (path && myPath) {
@@ -204,12 +204,12 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
             if (fileID && myFileID) {
                 if ([fileID isEqual:myFileID] == NO)
                     return NO;
-                NSString *volumeID = [dict objectForKey:NSURLVolumeIdentifierKey];
-                NSString *myVolumeID = [myDict objectForKey:NSURLVolumeIdentifierKey];
-                if ([volumeID isEqualToString:myVolumeID]) {
+                NSString *volumeUUID = [dict objectForKey:NSURLVolumeUUIDStringKey];
+                NSString *myVolumeUUID = [myDict objectForKey:NSURLVolumeUUIDStringKey];
+                if ([volumeUUID isEqualToString:myVolumeUUID]) {
                     [self updateWithURL:fileURL];
                     return YES;
-                } else if (volumeID && myVolumeID) {
+                } else if (volumeUUID && myVolumeUUID) {
                     return NO;
                 }
             }
