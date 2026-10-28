@@ -183,13 +183,14 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
     if (aliasHandle) {
         return [[fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI) path] isCaseInsensitiveEqual:[fileURL path]];
     } else if (data) {
-        NSDictionary *dict = [fileURL resourceValuesForKeys:@[NSURLPathKey, NSURLFileIDKey, NSURLVolumeUUIDStringKey] error:NULL];
-        NSDictionary *myDict = [NSURL resourceValuesForKeys:@[NSURLPathKey, NSURLFileIDKey, NSURLVolumeUUIDStringKey] fromBookmarkData:data];
-        NSString *path = [dict objectForKey:NSURLPathKey];
-        NSString *myPath = [myDict objectForKey:NSURLPathKey];
+        NSArray *keys = @[NSURLPathKey, NSURLFileIDKey, NSURLVolumeUUIDStringKey];
+        NSDictionary *rsrcValues = [fileURL resourceValuesForKeys:keys error:NULL];
+        NSDictionary *myRsrcValues = [NSURL resourceValuesForKeys:keys fromBookmarkData:data];
+        NSString *path = [rsrcValues objectForKey:NSURLPathKey];
+        NSString *myPath = [myRsrcValues objectForKey:NSURLPathKey];
         if (path && myPath) {
-            NSNumber *fileID = [dict objectForKey:NSURLFileIDKey];
-            NSNumber *myFileID = [myDict objectForKey:NSURLFileIDKey];
+            NSNumber *fileID = [rsrcValues objectForKey:NSURLFileIDKey];
+            NSNumber *myFileID = [myRsrcValues objectForKey:NSURLFileIDKey];
             if ([path isCaseInsensitiveEqual:myPath]) {
                 if (fileID && myFileID && [fileID isEqual:myFileID] == NO)
                     [self updateWithURL:fileURL];
@@ -204,8 +205,8 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
             if (fileID && myFileID) {
                 if ([fileID isEqual:myFileID] == NO)
                     return NO;
-                NSString *volumeUUID = [dict objectForKey:NSURLVolumeUUIDStringKey];
-                NSString *myVolumeUUID = [myDict objectForKey:NSURLVolumeUUIDStringKey];
+                NSString *volumeUUID = [rsrcValues objectForKey:NSURLVolumeUUIDStringKey];
+                NSString *myVolumeUUID = [myRsrcValues objectForKey:NSURLVolumeUUIDStringKey];
                 if ([volumeUUID isEqualToString:myVolumeUUID]) {
                     [self updateWithURL:fileURL];
                     return YES;
