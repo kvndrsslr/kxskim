@@ -655,7 +655,7 @@ static inline BOOL bookmarkHasFileURL(SKBookmark *bm, NSArray *fileURLs) {
 - (SKBookmark *)currentDocumentBookmark {
     NSURL *fileURL = [[[[NSApp mainWindow] windowController] document] fileURL];
     if (fileURL) {
-        NSArray *currentBookmarks = [[[self bookmarkRoot] entireContents] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"fileURL = %@", fileURL]];
+        NSArray *currentBookmarks = [[[self bookmarkRoot] entireContents] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^(SKBookmark *bm, NSDictionary *bindings){ return [bm hasFileURL:fileURL]; }]];
         if ([currentBookmarks count] > 1) {
             return [[SKBookmark alloc] initFolderWithChildren:[[NSArray alloc] initWithArray:currentBookmarks copyItems:YES] label:NSLocalizedString(@"Current Document", @"Menu item title")];
         }
