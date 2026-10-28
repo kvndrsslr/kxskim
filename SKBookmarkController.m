@@ -634,12 +634,19 @@ static NSUInteger maxRecentDocumentsCount = 0;
         return nil;
 }
 
+static inline BOOL bookmarkHasFileURL(SKBookmark *bm, NSArray *fileURLs) {
+    for (NSURL *fileURL in fileURLs) {
+        if ([fileURL isEqual:[NSNull null]] == NO && [bm hasFileURL:fileURL])
+            return YES;
+    }
+    return NO;
+}
+
 - (NSArray *)closedDocumentBookmarks {
     NSArray *openFileURLs = [[[NSDocumentController sharedDocumentController] documents] valueForKey:@"fileURL"];
     NSMutableArray *closedBms = [NSMutableArray array];
     for (SKBookmark *aBm in recentDocuments) {
-        NSURL *fileURL = [aBm fileURL];
-        if (fileURL && ([closedBms count] > 0 || [openFileURLs containsObject:fileURL] == NO))
+        if (([closedBms count] > 0 || bookmarkHasFileURL(aBm, openFileURLs) == NO) && [aBm fileURL])
             [closedBms addObject:aBm];
     }
     return closedBms;
