@@ -39,6 +39,7 @@
 #import "SKAlias.h"
 #import "NSString_SKExtensions.h"
 
+#define NSURLFileIDKey @"_NSURLFileIDKey"
 
 @implementation SKAlias
 
@@ -179,8 +180,8 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
     if (aliasHandle) {
         return [[fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI) path] isCaseInsensitiveEqual:[fileURL path]];
     } else if (data) {
-        NSDictionary *dict = [fileURL resourceValuesForKeys:@[NSURLPathKey, @"_NSURLFileIDKey", NSURLVolumeIdentifierKey] error:NULL];
-        NSDictionary *myDict = [NSURL resourceValuesForKeys:@[NSURLPathKey, @"_NSURLFileIDKey", NSURLVolumeIdentifierKey] fromBookmarkData:data];
+        NSDictionary *dict = [fileURL resourceValuesForKeys:@[NSURLPathKey, NSURLFileIDKey, NSURLVolumeIdentifierKey] error:NULL];
+        NSDictionary *myDict = [NSURL resourceValuesForKeys:@[NSURLPathKey, NSURLFileIDKey, NSURLVolumeIdentifierKey] fromBookmarkData:data];
         NSString *path = [dict objectForKey:NSURLPathKey];
         NSString *myPath = [myDict objectForKey:NSURLPathKey];
         if (path && myPath) {
@@ -188,8 +189,8 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
                 return YES;
             if ([[NSURL fileURLWithPath:myPath isDirectory:[[myPath pathExtension] isCaseInsensitiveEqual:@"pdfd"]] checkResourceIsReachableAndReturnError:NULL])
                 return NO;
-            NSNumber *fileID = [dict objectForKey:@"_NSURLFileIDKey"];
-            NSNumber *myFileID = [myDict objectForKey:@"_NSURLFileIDKey"];
+            NSNumber *fileID = [dict objectForKey:NSURLFileIDKey];
+            NSNumber *myFileID = [myDict objectForKey:NSURLFileIDKey];
             if (fileID && myFileID) {
                 if ([fileID isEqual:myFileID] == NO)
                     return NO;
