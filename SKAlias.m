@@ -210,11 +210,11 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
                     return NO;
                 NSString *volumeUUID = [rsrcValues objectForKey:NSURLVolumeUUIDStringKey];
                 NSString *myVolumeUUID = [myRsrcValues objectForKey:NSURLVolumeUUIDStringKey];
-                if ([volumeUUID isEqualToString:myVolumeUUID]) {
+                if (volumeUUID && myVolumeUUID) {
+                    if ([volumeUUID isEqualToString:myVolumeUUID] == NO)
+                        return NO;
                     [self updateWithURL:fileURL];
                     return YES;
-                } else if (volumeUUID && myVolumeUUID) {
-                    return NO;
                 }
             }
         }
