@@ -154,7 +154,7 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
         shouldUpdate = YES;
     } else if (data) {
         if (allowUI == NO) {
-            NSString *path = [[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey];
+            NSString *path = [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] stringByStandardizingPath];
             if (path) {
                 fileURL = [NSURL fileURLWithPath:path isDirectory:[[path pathExtension] isCaseInsensitiveEqual:@"pdfd"]];
                 if ([fileURL checkResourceIsReachableAndReturnError:NULL] == NO)
@@ -186,8 +186,8 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
         NSArray *keys = @[NSURLPathKey, NSURLFileIDKey, NSURLVolumeUUIDStringKey];
         NSDictionary *rsrcValues = [fileURL resourceValuesForKeys:keys error:NULL];
         NSDictionary *myRsrcValues = [NSURL resourceValuesForKeys:keys fromBookmarkData:data];
-        NSString *path = [rsrcValues objectForKey:NSURLPathKey];
-        NSString *myPath = [myRsrcValues objectForKey:NSURLPathKey];
+        NSString *path = [[rsrcValues objectForKey:NSURLPathKey] stringByStandardizingPath];
+        NSString *myPath = [[myRsrcValues objectForKey:NSURLPathKey] stringByStandardizingPath];
         if (path && myPath) {
             NSNumber *fileID = [rsrcValues objectForKey:NSURLFileIDKey];
             NSNumber *myFileID = [myRsrcValues objectForKey:NSURLFileIDKey];
