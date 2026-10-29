@@ -573,7 +573,7 @@ static Class SKBookmarkClass = Nil;
 - (NSString *)label {
     NSString *theLabel = label;
     if ([theLabel length] == 0)
-        [[self fileURL] getResourceValue:&theLabel forKey:NSURLLocalizedNameKey error:NULL];
+        theLabel = [alias name];
     return theLabel ?: @"";
 }
 

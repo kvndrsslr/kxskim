@@ -49,6 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, getter=isBookmark) BOOL bookmark;
 @property (nonatomic, nullable, readonly) NSURL *fileURL;
 @property (nonatomic, nullable, readonly) NSURL *fileURLNoUI;
+@property (nonatomic, nullable, readonly) NSString *name;
 
 - (nullable instancetype)initWithAliasData:(NSData *)data NS_DESIGNATED_INITIALIZER;
 - (nullable instancetype)initWithBookmarkData:(NSData *)data NS_DESIGNATED_INITIALIZER;

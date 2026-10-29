@@ -43,7 +43,7 @@
 
 @implementation SKAlias
 
-@dynamic data, bookmark, fileURL, fileURLNoUI;
+@dynamic data, bookmark, fileURL, fileURLNoUI, name;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -219,6 +219,14 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
         return [[[NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:NULL error:NULL] path] isCaseInsensitiveEqual:(path ?: [fileURL path])];
     }
     return NO;
+}
+
+- (NSString *)name {
+    NSString *name = nil;
+    NSURL *fileURL = [self fileURLNoUI];
+    if ((fileURL == nil || NO == [fileURL getResourceValue:&name forKey:NSURLLocalizedNameKey error:NULL]) && aliasHandle == nil)
+        name = [[NSURL resourceValuesForKeys:@[NSURLNameKey] fromBookmarkData:data] objectForKey:NSURLNameKey] ?: [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] lastPathComponent];
+    return name;
 }
 
 @end
