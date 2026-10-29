@@ -180,12 +180,11 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
 }
 
 - (BOOL)resolvesToFileURL:(NSURL *)fileURL {
+    NSURL *myFileURL = nil;
+    BOOL shouldUpdate = NO;
     if (aliasHandle) {
-        NSURL *myFileURL = fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI);
-        if (myFileURL == nil)
-            return NO;
-        [self updateWithURL:myFileURL];
-        return [[myFileURL path] isCaseInsensitiveEqual:[fileURL path]];
+        myFileURL = fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI);
+        shouldUpdate = YES;
     } else if (data) {
         NSArray *keys = @[NSURLPathKey, NSURLFileIDKey, NSURLVolumeUUIDStringKey];
         NSDictionary *rsrcValues = [fileURL resourceValuesForKeys:keys error:NULL];
@@ -200,7 +199,7 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
                     [self updateWithURL:fileURL];
                 return YES;
             }
-            NSURL *myFileURL = [NSURL fileURLWithPath:myPath isDirectory:[[myPath pathExtension] isCaseInsensitiveEqual:@"pdfd"]];
+            myFileURL = [NSURL fileURLWithPath:myPath isDirectory:[[myPath pathExtension] isCaseInsensitiveEqual:@"pdfd"]];
             if ([myFileURL checkResourceIsReachableAndReturnError:NULL]) {
                 if (fileID && myFileID && [fileID isEqual:myFileID] == NO)
                     [self updateWithURL:myFileURL];
@@ -220,15 +219,13 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
             }
         }
         NSURLBookmarkResolutionOptions options = NSURLBookmarkResolutionWithoutUI | NSURLBookmarkResolutionWithoutMounting;
-        BOOL shouldUpdate = NO;
-        NSURL *myFileURL = [NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
-        if (myFileURL == nil)
-            return NO;
-        if (shouldUpdate)
-            [self updateWithURL:myFileURL];
-        return [[myFileURL path] isCaseInsensitiveEqual:(path ?: [fileURL path])];
+        myFileURL = [NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
     }
-    return NO;
+    if (myFileURL == nil)
+        return NO;
+    if (shouldUpdate)
+        [self updateWithURL:myFileURL];
+    return [[myFileURL path] isCaseInsensitiveEqual:[fileURL path]];
 }
 
 - (NSString *)name {
