@@ -181,7 +181,11 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
 
 - (BOOL)resolvesToFileURL:(NSURL *)fileURL {
     if (aliasHandle) {
-        return [[fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI) path] isCaseInsensitiveEqual:[fileURL path]];
+        NSURL *myFileURL = fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI);
+        if (myFileURL == nil)
+            return nil;
+        [self updateWithURL:myFileURL];
+        return [[myFileURL path] isCaseInsensitiveEqual:[fileURL path]];
     } else if (data) {
         NSArray *keys = @[NSURLPathKey, NSURLFileIDKey, NSURLVolumeUUIDStringKey];
         NSDictionary *rsrcValues = [fileURL resourceValuesForKeys:keys error:NULL];
@@ -216,7 +220,11 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
             }
         }
         NSURLBookmarkResolutionOptions options = NSURLBookmarkResolutionWithoutUI | NSURLBookmarkResolutionWithoutMounting;
-        return [[[NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:NULL error:NULL] path] isCaseInsensitiveEqual:(path ?: [fileURL path])];
+        BOOL shouldUpdate = NO;
+        NSURL *myFileURL = [NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
+        if (shouldUpdate && myFileURL)
+            [self updateWithURL:myFileURL];
+        return [[myFileURL path] isCaseInsensitiveEqual:(path ?: [fileURL path])];
     }
     return NO;
 }
