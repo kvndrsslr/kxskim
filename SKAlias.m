@@ -145,44 +145,45 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
     }
 }
 
-- (NSURL *)fileURLAllowingUI:(BOOL)allowUI {
-    // we could cache the fileURL, but it would break when moving the file while we run
+- (NSURL *)fileURL {
     NSURL *fileURL = nil;
     BOOL shouldUpdate = NO;
     if (aliasHandle) {
-        fileURL = fileURLFromAliasHandle(aliasHandle, allowUI ? 0 : kResolveAliasFileNoUI);
+        fileURL = fileURLFromAliasHandle(aliasHandle, 0);
         shouldUpdate = YES;
     } else if (data) {
-        if (allowUI == NO) {
-            NSString *path = [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] stringByStandardizingPath];
-            if (path) {
-                fileURL = [NSURL fileURLWithPath:path isDirectory:[[path pathExtension] isCaseInsensitiveEqual:@"pdfd"]];
-                if ([fileURL checkResourceIsReachableAndReturnError:NULL]) {
-                    NSNumber *fileID = nil;
-                    NSNumber *myFileID = [[NSURL resourceValuesForKeys:@[NSURLFileIDKey] fromBookmarkData:data] objectForKey:NSURLFileIDKey];
-                    if (myFileID && [fileURL getResourceValue:&fileID forKey:NSURLFileIDKey error:NULL] && [fileID isEqual:myFileID] == NO)
-                        shouldUpdate = YES;
-                } else {
-                    fileURL = nil;
-                }
-            }
-        }
-        if (fileURL == nil) {
-            NSURLBookmarkResolutionOptions options = allowUI ? 0 : NSURLBookmarkResolutionWithoutUI | NSURLBookmarkResolutionWithoutMounting;
-            fileURL = [NSURL URLByResolvingBookmarkData:data options:options relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
-        }
+        fileURL = [NSURL URLByResolvingBookmarkData:data options:0 relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
     }
     if (shouldUpdate && fileURL)
         [self updateWithURL:fileURL];
     return fileURL;
 }
 
-- (NSURL *)fileURL {
-    return [self fileURLAllowingUI:YES];
-}
-
 - (NSURL *)fileURLNoUI {
-    return [self fileURLAllowingUI:NO];
+    NSURL *fileURL = nil;
+    BOOL shouldUpdate = NO;
+    if (aliasHandle) {
+        fileURL = fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI);
+        shouldUpdate = YES;
+    } else if (data) {
+        NSString *path = [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] stringByStandardizingPath];
+        if (path) {
+            fileURL = [NSURL fileURLWithPath:path isDirectory:[[path pathExtension] isCaseInsensitiveEqual:@"pdfd"]];
+            if ([fileURL checkResourceIsReachableAndReturnError:NULL]) {
+                NSNumber *fileID = nil;
+                NSNumber *myFileID = [[NSURL resourceValuesForKeys:@[NSURLFileIDKey] fromBookmarkData:data] objectForKey:NSURLFileIDKey];
+                if (myFileID && [fileURL getResourceValue:&fileID forKey:NSURLFileIDKey error:NULL] && [fileID isEqual:myFileID] == NO)
+                    shouldUpdate = YES;
+            } else {
+                fileURL = nil;
+            }
+        }
+        if (fileURL == nil)
+            fileURL = [NSURL URLByResolvingBookmarkData:data options:NSURLBookmarkResolutionWithoutUI | NSURLBookmarkResolutionWithoutMounting relativeToURL:nil bookmarkDataIsStale:&shouldUpdate error:NULL];
+    }
+    if (shouldUpdate && fileURL)
+        [self updateWithURL:fileURL];
+    return fileURL;
 }
 
 - (BOOL)resolvesToFileURL:(NSURL *)fileURL {
