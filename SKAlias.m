@@ -246,13 +246,10 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
 - (NSString *)fileType {
     NSString *type = nil;
     NSURL *fileURL = [self fileURLNoUI];
-    if (fileURL) {
+    if (fileURL)
         type = [[NSWorkspace sharedWorkspace] typeOfFile:[fileURL path] error:NULL];
-    } else if (aliasHandle == nil) {
-        NSString *ext = [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] pathExtension];
-        if (ext)
-            type = CFBridgingRelease(UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)ext, NULL));
-    }
+    else if (aliasHandle == nil && (type = [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] pathExtension]))
+        type = CFBridgingRelease(UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)type, NULL));
     return type;
 }
 
