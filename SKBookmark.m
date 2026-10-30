@@ -549,9 +549,7 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (NSImage *)icon {
-    NSURL *fileURL = [self fileURL];
-    NSString *type = fileURL ? [[NSWorkspace  sharedWorkspace] typeOfFile:[fileURL path] error:NULL] : nil;
-    return [[self class] iconForFileType:type hasSetup:[setup objectForKey:SKDocumentSetupWindowFrameKey] != nil];
+    return [[self class] iconForFileType:[alias fileType] hasSetup:[setup objectForKey:SKDocumentSetupWindowFrameKey] != nil];
 }
 
 - (NSUInteger)pageIndex {
