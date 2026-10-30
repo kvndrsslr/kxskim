@@ -114,7 +114,7 @@ static BOOL canUpdateFromURL(NSURL *fileURL);
 }
 
 - (void)startTimerCheckingFileReplacement {
-    __weak SKFileUpdateChecker *weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     fileUpdateTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:0.1] interval:2.0 repeats:YES block:^(NSTimer *timer){
         [weakSelf checkForFileReplacement];
     }];

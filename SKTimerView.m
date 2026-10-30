@@ -113,7 +113,7 @@
     if (showsTime == NO) {
         if (timer == nil) {
             startDate = [NSDate date];
-            __weak SKTimerView *weakSelf = self;
+            __weak typeof(self) weakSelf = self;
             timer = [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer *aTimer){
                 [weakSelf updateTime];
             }];

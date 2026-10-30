@@ -59,7 +59,7 @@
         point = aPoint;
         page = aPage;
         phase = 0;
-        __weak SKSyncDot *weakSelf = self;
+        __weak typeof(self) weakSelf = self;
         timer = [NSTimer scheduledTimerWithTimeInterval:0.05 repeats:YES block:^(NSTimer *t){ [weakSelf animate]; }];
         handler = [aHandler copy];
     }
@@ -82,7 +82,7 @@
 - (void)animate {
     if (atomic_fetch_add(&phase, 1) >= 9) {
         [timer invalidate];
-        __weak SKSyncDot *weakSelf = self;
+        __weak typeof(self) weakSelf = self;
         timer = [NSTimer scheduledTimerWithTimeInterval:5.0 repeats:NO block:^(NSTimer *t){ [weakSelf finish]; }];
     }
     if (handler) handler(NO);

@@ -207,7 +207,7 @@ static NSCharacterSet *nonAlphanumericCharacterSet = nil;
     [self updateSearchString:searchString];
     
     // Reset the timer if it hasn't expired yet
-    __weak SKTypeSelectHelper *weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     [self startTimerWithBlock:^(NSTimer *aTimer){ [weakSelf typeSelectSearchTimeout:aTimer]; }];
     
     if (matchOption != SKFullStringMatch)
@@ -222,7 +222,7 @@ static NSCharacterSet *nonAlphanumericCharacterSet = nil;
     if ([searchString length])
         [self updateSearchString:searchString];
     
-    __weak SKTypeSelectHelper *weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     [self startTimerWithBlock:^(NSTimer *aTimer){ [weakSelf typeSelectCleanTimeout:aTimer]; }];
     
     processing = NO;

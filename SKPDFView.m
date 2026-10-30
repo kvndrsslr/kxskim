@@ -1062,7 +1062,7 @@ enum {
         [self stopPacer];
     } else if (pacerSpeed > 0.0 && [[self document] isLocked] == NO) {
         CGFloat interval;
-        __weak SKPDFView *weakSelf = self;
+        __weak typeof(self) weakSelf = self;
         void (^block)(NSTimer *) = nil;
         if ([self hasReadingBar]) {
             pacerCounter = 0;
