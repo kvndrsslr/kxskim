@@ -1422,6 +1422,8 @@ static NSDate *fileModificationDate(NSURL *fileURL) {
         }
     } else if ([anItem action] == @selector(copyURL:)) {
         return [self fileURL] != nil;
+    } else if ([anItem action] == @selector(addBookmark:)) {
+        return [anItem tag] == 2 || [[self fileURL] checkResourceIsReachableAndReturnError:NULL];
     }
     return [super validateUserInterfaceItem:anItem];
 }

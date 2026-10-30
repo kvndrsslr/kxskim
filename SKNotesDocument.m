@@ -641,6 +641,8 @@
             default:
                 return NO;
         }
+    } else if ([menuItem action] == @selector(addBookmark:)) {
+        return [menuItem tag] == 2 || [[self fileURL] checkResourceIsReachableAndReturnError:NULL];
     } else if ([[SKNotesDocument superclass] instancesRespondToSelector:_cmd]) {
         return [super validateMenuItem:menuItem];
     }
