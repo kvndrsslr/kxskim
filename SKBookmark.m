@@ -549,7 +549,13 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (NSImage *)icon {
-    return [[self class] iconForFileType:[alias fileType] hasSetup:[setup objectForKey:SKDocumentSetupWindowFrameKey] != nil];
+    NSString *type = nil;
+    NSURL *fileURL = [self fileURL];
+    if (fileURL)
+        type = [[NSWorkspace sharedWorkspace] typeOfFile:[fileURL path] error:NULL];
+    else if ((type = [[alias resourceValueForKey:NSURLPathKey] pathExtension]))
+        type = CFBridgingRelease(UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)type, NULL));
+    return [[self class] iconForFileType:type hasSetup:[setup objectForKey:SKDocumentSetupWindowFrameKey] != nil];
 }
 
 - (NSUInteger)pageIndex {
@@ -570,8 +576,12 @@ static Class SKBookmarkClass = Nil;
 
 - (NSString *)label {
     NSString *theLabel = label;
-    if ([theLabel length] == 0)
-        theLabel = [alias name];
+    if ([theLabel length] == 0) {
+        NSURL *fileURL = [self fileURL];
+        if ((fileURL == nil || NO == [fileURL getResourceValue:&theLabel forKey:NSURLLocalizedNameKey error:NULL]))
+            theLabel = [alias resourceValueForKey:NSURLNameKey] ?: [[alias resourceValueForKey:NSURLPathKey] lastPathComponent];
+
+    }
     return theLabel ?: @"";
 }
 

@@ -43,7 +43,7 @@
 
 @implementation SKAlias
 
-@dynamic data, bookmark, fileURL, fileURLNoUI, name;
+@dynamic data, bookmark, fileURL, fileURLNoUI;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -136,6 +136,12 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
     return aliasHandle == nil && data != nil;
 }
 
+- (id)resourceValueForKey:(NSURLResourceKey)key {
+    if (aliasHandle || data == nil)
+        return nil;
+    return [[NSURL resourceValuesForKeys:@[key] fromBookmarkData:data] objectForKey:key];
+}
+
 - (void)updateWithURL:(NSURL *)fileURL {
     NSData *bmData = [fileURL bookmarkDataWithOptions:0 includingResourceValuesForKeys:nil relativeToURL:nil error:NULL];
     if (bmData) {
@@ -166,12 +172,12 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
         fileURL = fileURLFromAliasHandle(aliasHandle, kResolveAliasFileNoUI);
         shouldUpdate = YES;
     } else if (data) {
-        NSString *path = [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] stringByStandardizingPath];
+        NSString *path = [[self resourceValueForKey:NSURLPathKey] stringByStandardizingPath];
         if (path) {
             fileURL = [NSURL fileURLWithPath:path isDirectory:[[path pathExtension] isCaseInsensitiveEqual:@"pdfd"]];
             if ([fileURL checkResourceIsReachableAndReturnError:NULL]) {
                 NSNumber *fileID = nil;
-                NSNumber *myFileID = [[NSURL resourceValuesForKeys:@[NSURLFileIDKey] fromBookmarkData:data] objectForKey:NSURLFileIDKey];
+                NSNumber *myFileID = [self resourceValueForKey:NSURLFileIDKey];
                 if (myFileID && [fileURL getResourceValue:&fileID forKey:NSURLFileIDKey error:NULL] && [fileID isEqual:myFileID] == NO)
                     shouldUpdate = YES;
             } else {
@@ -233,24 +239,6 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
     if (shouldUpdate)
         [self updateWithURL:myFileURL];
     return [[myFileURL path] isCaseInsensitiveEqual:[fileURL path]];
-}
-
-- (NSString *)name {
-    NSString *name = nil;
-    NSURL *fileURL = [self fileURLNoUI];
-    if ((fileURL == nil || NO == [fileURL getResourceValue:&name forKey:NSURLLocalizedNameKey error:NULL]) && aliasHandle == nil)
-        name = [[NSURL resourceValuesForKeys:@[NSURLNameKey] fromBookmarkData:data] objectForKey:NSURLNameKey] ?: [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] lastPathComponent];
-    return name;
-}
-
-- (NSString *)fileType {
-    NSString *type = nil;
-    NSURL *fileURL = [self fileURLNoUI];
-    if (fileURL)
-        type = [[NSWorkspace sharedWorkspace] typeOfFile:[fileURL path] error:NULL];
-    else if (aliasHandle == nil && (type = [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] pathExtension]))
-        type = CFBridgingRelease(UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)type, NULL));
-    return type;
 }
 
 @end
