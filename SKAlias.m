@@ -157,8 +157,14 @@ static inline void disposeAliasHandle(AliasHandle aliasHandle) {
             NSString *path = [[[NSURL resourceValuesForKeys:@[NSURLPathKey] fromBookmarkData:data] objectForKey:NSURLPathKey] stringByStandardizingPath];
             if (path) {
                 fileURL = [NSURL fileURLWithPath:path isDirectory:[[path pathExtension] isCaseInsensitiveEqual:@"pdfd"]];
-                if ([fileURL checkResourceIsReachableAndReturnError:NULL] == NO)
+                if ([fileURL checkResourceIsReachableAndReturnError:NULL]) {
+                    NSNumber *fileID = nil;
+                    NSNumber *myFileID = [[NSURL resourceValuesForKeys:@[NSURLFileIDKey] fromBookmarkData:data] objectForKey:NSURLFileIDKey];
+                    if (myFileID && [fileURL getResourceValue:&fileID forKey:NSURLFileIDKey error:NULL] && [fileID isEqual:myFileID] == NO)
+                        shouldUpdate = YES;
+                } else {
                     fileURL = nil;
+                }
             }
         }
         if (fileURL == nil) {
