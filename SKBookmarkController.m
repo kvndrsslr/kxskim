@@ -265,24 +265,23 @@ static NSUInteger maxRecentDocumentsCount = 0;
 }
 
 - (BOOL)addRecentDocumentForURL:(NSURL *)fileURL pageIndex:(NSUInteger)pageIndex snapshots:(NSArray *)snapshots {
+    // fileURL must exist when this is called
     if (maxRecentDocumentsCount <= 0 || appIsTerminating)
         return YES;
     
-    if (fileURL) {
-        SKBookmark *info = [[SKBookmark alloc] initWithURL:fileURL pageIndex:pageIndex snapshots:snapshots];
-        if (info) {
-            SKBookmark *oldInfo = [self recentDocumentAtURL:fileURL];
-            if (oldInfo)
-                [recentDocuments removeObjectIdenticalTo:oldInfo];
-            [recentDocuments insertObject:info atIndex:0];
-            NSUInteger maxCount = maxRecentDocumentsCount + [[[NSDocumentController sharedDocumentController] documents] count];
-            while ([recentDocuments count] > maxCount)
-                [recentDocuments removeLastObject];
-            
-            [self performSelectorOnce:@selector(saveBookmarksData) afterDelay:SAVE_DELAY];
-            
-            return YES;
-        }
+    SKBookmark *info = [[SKBookmark alloc] initWithURL:fileURL pageIndex:pageIndex snapshots:snapshots];
+    if (info) {
+        SKBookmark *oldInfo = [self recentDocumentAtURL:fileURL];
+        if (oldInfo)
+            [recentDocuments removeObjectIdenticalTo:oldInfo];
+        [recentDocuments insertObject:info atIndex:0];
+        NSUInteger maxCount = maxRecentDocumentsCount + [[[NSDocumentController sharedDocumentController] documents] count];
+        while ([recentDocuments count] > maxCount)
+            [recentDocuments removeLastObject];
+        
+        [self performSelectorOnce:@selector(saveBookmarksData) afterDelay:SAVE_DELAY];
+        
+        return YES;
     }
     
     return NO;
@@ -636,14 +635,19 @@ static NSUInteger maxRecentDocumentsCount = 0;
 
 static inline BOOL bookmarkHasFileURL(SKBookmark *bm, NSArray *fileURLs) {
     for (NSURL *fileURL in fileURLs) {
-        if ([fileURL isEqual:[NSNull null]] == NO && [bm hasFileURL:fileURL])
+        if ([bm hasFileURL:fileURL])
             return YES;
     }
     return NO;
 }
 
 - (NSArray *)closedDocumentBookmarks {
-    NSArray *openFileURLs = [[[NSDocumentController sharedDocumentController] documents] valueForKey:@"fileURL"];
+    NSMutableArray *openFileURLs = [NSMutableArray array];
+    for (NSDocument *document in [[NSDocumentController sharedDocumentController] documents]) {
+        NSURL *fileURL = [document fileURL];
+        if ([fileURL checkResourceIsReachableAndReturnError:NULL])
+            [openFileURLs addObject:fileURL];
+    }
     NSMutableArray *closedBms = [NSMutableArray array];
     for (SKBookmark *aBm in recentDocuments) {
         if (([closedBms count] > 0 || bookmarkHasFileURL(aBm, openFileURLs) == NO) && [aBm fileURL])
@@ -654,7 +658,7 @@ static inline BOOL bookmarkHasFileURL(SKBookmark *bm, NSArray *fileURLs) {
 
 - (SKBookmark *)currentDocumentBookmark {
     NSURL *fileURL = [[[[NSApp mainWindow] windowController] document] fileURL];
-    if (fileURL) {
+    if ([fileURL checkResourceIsReachableAndReturnError:NULL]) {
         NSArray *currentBookmarks = [[[self bookmarkRoot] entireContents] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^(SKBookmark *bm, NSDictionary *bindings){ return [bm hasFileURL:fileURL]; }]];
         if ([currentBookmarks count] > 1) {
             return [[SKBookmark alloc] initFolderWithChildren:[[NSArray alloc] initWithArray:currentBookmarks copyItems:YES] label:NSLocalizedString(@"Current Document", @"Menu item title")];

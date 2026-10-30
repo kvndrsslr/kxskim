@@ -96,6 +96,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeBookmarkAtIndex:(NSUInteger)anIndex ofBookmark:(SKBookmark *)parent animate:(BOOL)animate;
 - (void)replaceBookmarkAtIndex:(NSUInteger)anIndex ofBookmark:(SKBookmark *)parent withBookmark:(SKBookmark *)bookmark animate:(BOOL)animate;
 
+// fileURL is assumed to exist in the next two methods
 - (BOOL)addRecentDocumentForURL:(NSURL *)fileURL pageIndex:(NSUInteger)pageIndex snapshots:(nullable NSArray<NSDictionary<NSString *, id> *> *)snapshots;
 - (nullable SKBookmark *)recentDocumentAtURL:(NSURL *)fileURL;
 

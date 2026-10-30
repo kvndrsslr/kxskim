@@ -237,6 +237,8 @@ enum {
     if ([[primaryWindowController window] delegate] == nil)
         return;
     NSURL *fileURL = [self fileURL];
+    if ([fileURL checkResourceIsReachableAndReturnError:NULL] == NO)
+        return;
     NSUInteger pageIndex = [[[self pdfView] currentPage] pageIndex];
     NSArray *snapshots = [[[self primaryWindowController] snapshots] valueForKey:SKSnapshotCurrentSetupKey];
     if ([[SKBookmarkController sharedBookmarkController] addRecentDocumentForURL:fileURL pageIndex:pageIndex snapshots:[snapshots count] > 0 ? snapshots : nil])

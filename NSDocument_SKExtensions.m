@@ -105,7 +105,8 @@ NSNotificationName const SKDocumentFileURLDidChangeNotification = @"SKDocumentFi
 #pragma mark Document Setup
 
 - (void)saveRecentDocumentInfo {
-    if ([[SKBookmarkController sharedBookmarkController] addRecentDocumentForURL:[self fileURL] pageIndex:NSNotFound snapshots:nil])
+    NSURL *fileURL = [self fileURL];
+    if ([fileURL checkResourceIsReachableAndReturnError:NULL] && [[SKBookmarkController sharedBookmarkController] addRecentDocumentForURL:fileURL pageIndex:NSNotFound snapshots:nil])
         [self setRecentInfoNeedsUpdate:NO];
 }
 
