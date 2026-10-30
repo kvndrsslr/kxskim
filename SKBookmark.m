@@ -533,7 +533,7 @@ static Class SKBookmarkClass = Nil;
     if (cachedFileURL) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            __strong typeof(weakSelf) strongSelf = weakSelf;
+            __strong typeof(self) strongSelf = weakSelf;
             if (strongSelf)
                 strongSelf->cachedFileURL = nil;
         });
