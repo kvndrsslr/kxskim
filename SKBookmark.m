@@ -70,6 +70,7 @@
 
 @interface SKFileBookmark : SKBookmark {
     SKAlias *alias;
+    NSURL *cachedFileURL;
     NSString *label;
     NSUInteger pageIndex;
     NSDictionary *setup;
@@ -526,17 +527,31 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (NSURL *)fileURL {
-    return [alias fileURLNoUI];
+    if (cachedFileURL)
+        return [cachedFileURL isEqual:[NSNull null]] ? nil : cachedFileURL;
+    cachedFileURL = [alias fileURLNoUI] ?: (id)[NSNull null];
+    if (cachedFileURL) {
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            if (strongSelf)
+                strongSelf->cachedFileURL = nil;
+        });
+    }
+    return cachedFileURL;
 }
 
 - (void)setFileURL:(NSURL *)fileURL {
     SKAlias *newAlias = [[SKAlias alloc] initWithURL:fileURL];
     if (newAlias) {
         alias = newAlias;
+        cachedFileURL = nil;
     }
 }
 
 - (NSURL *)fileURLToOpen {
+    if (cachedFileURL && [cachedFileURL isEqual:[NSNull null]] == NO)
+        return cachedFileURL;
     return [alias fileURL];
 }
 
