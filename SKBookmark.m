@@ -505,14 +505,10 @@ static Class SKBookmarkClass = Nil;
 - (NSDictionary *)properties {
     NSMutableDictionary *properties = [NSMutableDictionary dictionaryWithDictionary:setup];
     NSData *data = [alias data];
-    NSString *dataKey = [alias isBookmark] ? BOOKMARK_KEY : ALIASDATA_KEY;
-    [properties removeObjectForKey:[dataKey isEqualToString:ALIASDATA_KEY] ? BOOKMARK_KEY : ALIASDATA_KEY];
+    [properties removeObjectForKey:[alias isBookmark] ? ALIASDATA_KEY : BOOKMARK_KEY];
     [properties setObject:BOOKMARK_STRING forKey:TYPE_KEY];
-    [properties setValue:data forKey:dataKey];
+    [properties setValue:data forKey:[alias isBookmark] ? BOOKMARK_KEY : ALIASDATA_KEY];
     [properties setValue:label forKey:LABEL_KEY];
-    [properties addEntriesFromDictionary:[NSDictionary dictionaryWithObjectsAndKeys:BOOKMARK_STRING, TYPE_KEY, data, dataKey, label, LABEL_KEY, nil]];
-    if (data == nil && label)
-        [properties setObject:label forKey:LABEL_KEY];
     if (pageIndex != NSNotFound) {
         [properties setObject:[NSNumber numberWithUnsignedInteger:pageIndex] forKey:PAGEINDEX_KEY];
         if ([setup objectForKey:PAGEINDEX_KEY] && [[setup objectForKey:PAGEINDEX_KEY] unsignedIntegerValue] != pageIndex)
