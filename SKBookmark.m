@@ -481,22 +481,18 @@ static Class SKBookmarkClass = Nil;
             alias = [[SKAlias alloc] initWithAliasData:data];
         else if ((data = [aSetupDict objectForKey:BOOKMARK_KEY]))
             alias = [[SKAlias alloc] initWithBookmarkData:data];
-        if (alias) {
-            NSNumber *pageIndexNumber = [aSetupDict objectForKey:PAGEINDEX_KEY];
-            pageIndex = pageIndexNumber ? [pageIndexNumber unsignedIntegerValue] : NSNotFound;
-            label = [aLabel copy];
-            if ([aSetupDict objectForKey:SKDocumentSetupWindowFrameKey]) {
-                setup = [aSetupDict mutableCopy];
-                [(NSMutableDictionary *)setup removeObjectsForKeys:@[TYPE_KEY, ALIASDATA_KEY, BOOKMARK_KEY, LABEL_KEY]];
-                if (pageIndexNumber && pageIndex == NSNotFound)
-                    [(NSMutableDictionary *)setup removeObjectForKey:PAGEINDEX_KEY];
-            } else if ([aSetupDict objectForKey:SNAPSHOTS_KEY]) {
-                setup = @{SNAPSHOTS_KEY:[aSetupDict objectForKey:SNAPSHOTS_KEY]};
-            } else {
-                setup = nil;
-            }
+        NSNumber *pageIndexNumber = [aSetupDict objectForKey:PAGEINDEX_KEY];
+        pageIndex = pageIndexNumber ? [pageIndexNumber unsignedIntegerValue] : NSNotFound;
+        label = [aLabel copy];
+        if ([aSetupDict objectForKey:SKDocumentSetupWindowFrameKey]) {
+            setup = [aSetupDict mutableCopy];
+            [(NSMutableDictionary *)setup removeObjectsForKeys:@[TYPE_KEY, ALIASDATA_KEY, BOOKMARK_KEY, LABEL_KEY]];
+            if (pageIndexNumber && pageIndex == NSNotFound)
+                [(NSMutableDictionary *)setup removeObjectForKey:PAGEINDEX_KEY];
+        } else if ([aSetupDict objectForKey:SNAPSHOTS_KEY]) {
+            setup = @{SNAPSHOTS_KEY:[aSetupDict objectForKey:SNAPSHOTS_KEY]};
         } else {
-            self = nil;
+            setup = nil;
         }
     }
     return self;
@@ -511,7 +507,12 @@ static Class SKBookmarkClass = Nil;
     NSData *data = [alias data];
     NSString *dataKey = [alias isBookmark] ? BOOKMARK_KEY : ALIASDATA_KEY;
     [properties removeObjectForKey:[dataKey isEqualToString:ALIASDATA_KEY] ? BOOKMARK_KEY : ALIASDATA_KEY];
+    [properties setObject:BOOKMARK_STRING forKey:TYPE_KEY];
+    [properties setValue:data forKey:dataKey];
+    [properties setValue:label forKey:LABEL_KEY];
     [properties addEntriesFromDictionary:[NSDictionary dictionaryWithObjectsAndKeys:BOOKMARK_STRING, TYPE_KEY, data, dataKey, label, LABEL_KEY, nil]];
+    if (data == nil && label)
+        [properties setObject:label forKey:LABEL_KEY];
     if (pageIndex != NSNotFound) {
         [properties setObject:[NSNumber numberWithUnsignedInteger:pageIndex] forKey:PAGEINDEX_KEY];
         if ([setup objectForKey:PAGEINDEX_KEY] && [[setup objectForKey:PAGEINDEX_KEY] unsignedIntegerValue] != pageIndex)
