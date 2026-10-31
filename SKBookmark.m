@@ -526,21 +526,19 @@ static Class SKBookmarkClass = Nil;
     return SKBookmarkTypeBookmark;
 }
 
-- (void)clearCachedFileURL {
-    cachedFileURL = nil;
-}
-
-- (void)cacheFileURL:(NSURL *)fileURL {
-    cachedFileURL = fileURL ?: (id)[NSNull null];
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf clearCachedFileURL]; });
+- (void)setCachedFileURL:(NSURL *)fileURL {
+    cachedFileURL = fileURL;
+    if (fileURL) {
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf setCachedFileURL:nil]; });
+    }
 }
 
 - (NSURL *)fileURL {
     NSURL *fileURL = nil;
     if (cachedFileURL == nil) {
         fileURL = [alias fileURLNoUI];
-        [self cacheFileURL:fileURL];
+        [self setCachedFileURL:fileURL ?: (id)[NSNull null]];
     } else if ([cachedFileURL isEqual:[NSNull null]] == NO) {
         fileURL = cachedFileURL;
     }
@@ -562,7 +560,7 @@ static Class SKBookmarkClass = Nil;
     } else {
         fileURL = [alias fileURL];
         if (cachedFileURL == nil)
-            [self cacheFileURL:fileURL];
+            [self setCachedFileURL:fileURL ?: (id)[NSNull null]];
         else if (fileURL)
             cachedFileURL = fileURL;
     }
