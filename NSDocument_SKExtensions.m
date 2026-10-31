@@ -133,6 +133,8 @@ NSNotificationName const SKDocumentFileURLDidChangeNotification = @"SKDocumentFi
         NSData *data = [alias data];
         if (data)
             [setup setObject:data forKey:[alias isBookmark] ? SKDocumentSetupBookmarkKey : SKDocumentSetupAliasKey];
+    } else {
+        [setup setObject:[self displayName] forKey:@"label"];
     }
     
     NSWindow *window = [self primaryWindow];

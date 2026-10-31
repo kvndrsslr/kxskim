@@ -365,7 +365,7 @@ static Class SKBookmarkClass = Nil;
     NSMutableArray *aChildren = [NSMutableArray array];
     SKBookmark *child;
     for (NSDictionary *setup in aSetupDicts) {
-        if ((child = [[SKBookmark alloc] initWithSetup:setup label:nil])) {
+        if ((child = [[SKBookmark alloc] initWithSetup:setup label:[setup objectForKey:LABEL_KEY]])) {
             [aChildren addObject:child];
         }
     }
