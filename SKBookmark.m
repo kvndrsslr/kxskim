@@ -527,18 +527,20 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (NSURL *)fileURL {
-    if (cachedFileURL)
-        return [cachedFileURL isEqual:[NSNull null]] ? nil : cachedFileURL;
-    cachedFileURL = [alias fileURLNoUI] ?: (id)[NSNull null];
-    if (cachedFileURL) {
+    NSURL *fileURL = nil;
+    if (cachedFileURL == nil) {
+        fileURL = [alias fileURLNoUI];
+        cachedFileURL = fileURL ?: (id)[NSNull null];
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
             __strong typeof(self) strongSelf = weakSelf;
             if (strongSelf)
                 strongSelf->cachedFileURL = nil;
         });
+    } else if ([cachedFileURL isEqual:[NSNull null]] == NO) {
+        fileURL = cachedFileURL;
     }
-    return cachedFileURL;
+    return fileURL;
 }
 
 - (void)setFileURL:(NSURL *)fileURL {
@@ -550,9 +552,25 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (NSURL *)fileURLToOpen {
-    if (cachedFileURL && [cachedFileURL isEqual:[NSNull null]] == NO)
-        return cachedFileURL;
-    return [alias fileURL];
+    NSURL *fileURL = nil;
+    if (cachedFileURL && [cachedFileURL isEqual:[NSNull null]] == NO) {
+        fileURL = cachedFileURL;
+    } else {
+        fileURL = [alias fileURL];
+        if (cachedFileURL == nil) {
+            __weak typeof(self) weakSelf = self;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                __strong typeof(self) strongSelf = weakSelf;
+                if (strongSelf)
+                    strongSelf->cachedFileURL = nil;
+            });
+        }
+        if (fileURL)
+            cachedFileURL = fileURL;
+        else if (cachedFileURL == nil)
+            cachedFileURL = (id)[NSNull null];
+    }
+    return fileURL;
 }
 
 - (NSString *)fileDescription {
