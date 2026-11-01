@@ -75,13 +75,15 @@
     NSUInteger pageIndex;
     NSDictionary *setup;
 }
-- (nullable instancetype)initWithURL:(NSURL *)aURL pageIndex:(NSUInteger)aPageIndex snapshots:(nullable NSArray<NSDictionary<NSString *, id> *> *)aSnapshots label:(nullable NSString *)aLabel;
+- (instancetype)initWithURL:(NSURL *)aURL pageIndex:(NSUInteger)aPageIndex snapshots:(NSArray *)aSnapshots label:(NSString *)aLabel;
+- (instancetype)initWithSetup:(NSDictionary *)aSetupDict label:(NSString *)aLabel;
 @end
 
 @interface SKFolderBookmark : SKBookmark {
     NSString *label;
     NSMutableArray *children;
 }
+- (instancetype)initWithChildren:(NSArray *)aChildren label:(NSString *)aLabel;
 @end
 
 @interface SKRootBookmark : SKFolderBookmark
@@ -343,7 +345,7 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (instancetype)initFolderWithChildren:(NSArray *)aChildren label:(NSString *)aLabel {
-    return (id)[[SKFolderBookmark alloc] initFolderWithChildren:aChildren label:aLabel];
+    return (id)[[SKFolderBookmark alloc] initWithChildren:aChildren label:aLabel];
 }
 
 - (instancetype)initRootWithChildrenProperties:(NSArray *)childrenProperties {
@@ -354,7 +356,7 @@ static Class SKBookmarkClass = Nil;
             [aChildren addObject:child];
         }
     }
-    return (id)[[SKRootBookmark alloc] initFolderWithChildren:aChildren label:NSLocalizedString(@"Bookmarks Menu", @"Menu item title")];
+    return (id)[[SKRootBookmark alloc] initWithChildren:aChildren label:NSLocalizedString(@"Bookmarks Menu", @"Menu item title")];
 }
 
 - (instancetype)initSessionWithSetups:(NSArray *)aSetupDicts label:(NSString *)aLabel {
@@ -365,7 +367,7 @@ static Class SKBookmarkClass = Nil;
             [aChildren addObject:child];
         }
     }
-    return (id)[[SKSessionBookmark alloc] initFolderWithChildren:aChildren label:aLabel];
+    return (id)[[SKSessionBookmark alloc] initWithChildren:aChildren label:aLabel];
 }
 
 - (instancetype)initSeparator {
@@ -650,7 +652,7 @@ static Class SKBookmarkClass = Nil;
     return keyPaths;
 }
 
-- (instancetype)initFolderWithChildren:(NSArray *)aChildren label:(NSString *)aLabel {
+- (instancetype)initWithChildren:(NSArray *)aChildren label:(NSString *)aLabel {
     self = [super init];
     if (self) {
         label = [aLabel copy];
