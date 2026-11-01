@@ -256,11 +256,12 @@ static Class SKBookmarkClass = Nil;
 - (NSArray *)entireContents { return nil; }
 
 - (BOOL)isExpanded {
-    return [[SKBookmarkController sharedBookmarkController] isBookmarkExpanded:self];
+    return [self bookmarkType] == SKBookmarkTypeFolder && [[SKBookmarkController sharedBookmarkController] isBookmarkExpanded:self];
 }
 
 - (void)setExpanded:(BOOL)flag {
-    [[SKBookmarkController sharedBookmarkController] setExpanded:flag forBookmark:self];
+    if ([self bookmarkType] == SKBookmarkTypeFolder)
+        [[SKBookmarkController sharedBookmarkController] setExpanded:flag forBookmark:self];
 }
 
 - (NSArray *)bookmarks {
@@ -268,11 +269,21 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (void)insertObject:(SKBookmark *)bookmark inBookmarksAtIndex:(NSUInteger)anIndex {
-    [[SKBookmarkController sharedBookmarkController] insertBookmark:bookmark atIndex:anIndex ofBookmark:self animate:NO];
+    if ([self bookmarkType] == SKBookmarkTypeFolder) {
+        [[SKBookmarkController sharedBookmarkController] insertBookmark:bookmark atIndex:anIndex ofBookmark:self animate:NO];
+    } else {
+        [[NSScriptCommand currentCommand] setScriptErrorNumber:NSReceiversCantHandleCommandScriptError];
+        [[NSScriptCommand currentCommand] setScriptErrorString:@"Invalid container for bookmark."];
+    }
 }
 
 - (void)removeObjectFromBookmarksAtIndex:(NSUInteger)anIndex {
-    [[SKBookmarkController sharedBookmarkController] removeBookmarkAtIndex:anIndex ofBookmark:self animate:NO];
+    if ([self bookmarkType] == SKBookmarkTypeFolder) {
+        [[SKBookmarkController sharedBookmarkController] removeBookmarkAtIndex:anIndex ofBookmark:self animate:NO];
+    } else {
+        [[NSScriptCommand currentCommand] setScriptErrorNumber:NSReceiversCantHandleCommandScriptError];
+        [[NSScriptCommand currentCommand] setScriptErrorString:@"Invalid container for bookmark."];
+    }
 }
 
 - (id)newScriptingObjectOfClass:(Class)objectClass forValueForKey:(NSString *)key withContentsValue:(id)contentsValue properties:(NSDictionary *)properties {
