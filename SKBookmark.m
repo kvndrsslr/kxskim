@@ -481,6 +481,7 @@ static Class SKBookmarkClass = Nil;
             alias = [[SKAlias alloc] initWithBookmarkData:data];
         else if ((data = [aSetupDict objectForKey:ALIASDATA_KEY]))
             alias = [[SKAlias alloc] initWithAliasData:data];
+        // do not return nil when alias is nil to have a complete session with valid tab indexes
         NSNumber *pageIndexNumber = [aSetupDict objectForKey:PAGEINDEX_KEY];
         pageIndex = pageIndexNumber ? [pageIndexNumber unsignedIntegerValue] : NSNotFound;
         label = [aLabel copy];
