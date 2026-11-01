@@ -669,10 +669,26 @@ static inline BOOL bookmarkHasFileURL(SKBookmark *bm, NSArray *fileURLs) {
     return closedBms;
 }
 
+static void addBookmarksWithFileURLToArray(NSMutableArray *array, SKBookmark *bookmark, NSURL *fileURL) {
+    switch ([bookmark bookmarkType]) {
+        case SKBookmarkTypeBookmark:
+            if ([bookmark hasFileURL:fileURL])
+                [array addObject:bookmark];
+            break;
+        case SKBookmarkTypeFolder:
+            for (SKBookmark *bm in [bookmark children])
+                addBookmarksWithFileURLToArray(array, bm, fileURL);
+            break;
+        default:
+            break;
+    }
+}
+
 - (SKBookmark *)currentDocumentBookmark {
     NSURL *fileURL = [[[[NSApp mainWindow] windowController] document] fileURL];
     if ([fileURL checkResourceIsReachableAndReturnError:NULL]) {
-        NSArray *currentBookmarks = [[[self bookmarkRoot] entireContents] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^(SKBookmark *bm, NSDictionary *bindings){ return [bm hasFileURL:fileURL]; }]];
+        NSMutableArray *currentBookmarks = [NSMutableArray array];
+        addBookmarksWithFileURLToArray(currentBookmarks, bookmarkRoot, fileURL);
         if ([currentBookmarks count] > 1) {
             return [[SKBookmark alloc] initFolderWithChildren:[[NSArray alloc] initWithArray:currentBookmarks copyItems:YES] label:NSLocalizedString(@"Current Document", @"Menu item title")];
         }
@@ -724,10 +740,6 @@ static inline BOOL containsFolders(SKBookmark *bookmark) {
         
         if ([bookmark isKindOfClass:[SKBookmark class]]) {
             NSArray *bookmarks = [bookmark children];
-            if (tag == SKBookmarkTagClosedDocuments && [bookmarks count] == 0) {
-                bookmarks = [self closedDocumentBookmarks];
-                [bookmark insertChildren:bookmarks atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [bookmarks count])]];
-            }
             if (tag == SKBookmarkTagBookmarksMenu) {
                 NSInteger i = [menu numberOfItems];
                 while (i-- > 0 && ([[menu itemAtIndex:i] isSeparatorItem] || [[menu itemAtIndex:i] representedObject]))
@@ -749,6 +761,10 @@ static inline BOOL containsFolders(SKBookmark *bookmark) {
                 }
             } else {
                 [menu removeAllItems];
+                if (tag == SKBookmarkTagClosedDocuments && [bookmarks count] == 0) {
+                    bookmarks = [self closedDocumentBookmarks];
+                    [bookmark insertChildren:bookmarks atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [bookmarks count])]];
+                }
             }
             if ([menu numberOfItems] > 0 && [bookmarks count] > 0)
                 [menu addItem:[NSMenuItem separatorItem]];
