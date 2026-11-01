@@ -81,10 +81,10 @@ typedef NS_ENUM(NSInteger, SKBookmarkType) {
 @property (nonatomic, nullable, weak) SKBookmark *parent;
 @property (nonatomic, readonly) NSArray<SKBookmark *> *containingBookmarks;
 
-@property (nonatomic, readonly) NSArray<SKBookmark *> *children;
+@property (nonatomic, nullable, readonly) NSArray<SKBookmark *> *children;
 @property (nonatomic, readonly) NSUInteger countOfChildren;
-- (SKBookmark *)objectInChildrenAtIndex:(NSUInteger)anIndex;
-- (NSArray<SKBookmark *> *)childrenAtIndexes:(NSIndexSet *)indexes;
+- (nullable SKBookmark *)objectInChildrenAtIndex:(NSUInteger)anIndex;
+- (nullable NSArray<SKBookmark *> *)childrenAtIndexes:(NSIndexSet *)indexes;
 - (void)insertObject:(SKBookmark *)child inChildrenAtIndex:(NSUInteger)anIndex;
 - (void)insertChildren:(NSArray<SKBookmark *> *)newChildren atIndexes:(NSIndexSet *)indexes;
 - (void)removeObjectFromChildrenAtIndex:(NSUInteger)anIndex;
@@ -93,7 +93,7 @@ typedef NS_ENUM(NSInteger, SKBookmarkType) {
 @property (nonatomic, nullable, readonly) SKBookmark *scriptingParent;
 @property (nonatomic, nullable, readonly) NSArray<SKBookmark *> *entireContents;
 
-@property (nonatomic, readonly) NSArray<SKBookmark *> *bookmarks;
+@property (nonatomic, nullable, readonly) NSArray<SKBookmark *> *bookmarks;
 - (void)insertObject:(SKBookmark *)bookmark inBookmarksAtIndex:(NSUInteger)anIndex;
 - (void)removeObjectFromBookmarksAtIndex:(NSUInteger)anIndex;
 
