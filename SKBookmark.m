@@ -550,17 +550,10 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (NSURL *)fileURLToOpen {
-    NSURL *fileURL = nil;
-    if (cachedFileURL && [cachedFileURL isEqual:[NSNull null]] == NO) {
-        fileURL = cachedFileURL;
-    } else {
-        fileURL = [alias fileURL];
-        if (cachedFileURL == nil)
-            [self setCachedFileURL:fileURL ?: (id)[NSNull null]];
-        else if (fileURL)
-            cachedFileURL = fileURL;
-    }
-    return fileURL;
+    if (cachedFileURL && [cachedFileURL isEqual:[NSNull null]] == NO)
+        return cachedFileURL;
+    else
+        return [alias fileURL];
 }
 
 - (NSString *)fileDescription {
