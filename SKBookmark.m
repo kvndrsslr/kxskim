@@ -192,7 +192,7 @@ static Class SKBookmarkClass = Nil;
     return [[SKBookmark alloc] initWithProperties:[self properties]];
 }
 
-- (NSDictionary *)properties { return nil; }
+- (NSDictionary *)properties { return @{}; }
 
 - (SKBookmarkType)bookmarkType { return SKBookmarkTypeSeparator; }
 
