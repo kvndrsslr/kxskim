@@ -476,11 +476,11 @@ static Class SKBookmarkClass = Nil;
 - (instancetype)initWithSetup:(NSDictionary *)aSetupDict label:(NSString *)aLabel {
     self = [super init];
     if (self) {
-        NSData *data;
-        if ((data = [aSetupDict objectForKey:ALIASDATA_KEY]))
-            alias = [[SKAlias alloc] initWithAliasData:data];
-        else if ((data = [aSetupDict objectForKey:BOOKMARK_KEY]))
+        NSData *data = [aSetupDict objectForKey:BOOKMARK_KEY];
+        if (data)
             alias = [[SKAlias alloc] initWithBookmarkData:data];
+        else if ((data = [aSetupDict objectForKey:ALIASDATA_KEY]))
+            alias = [[SKAlias alloc] initWithAliasData:data];
         NSNumber *pageIndexNumber = [aSetupDict objectForKey:PAGEINDEX_KEY];
         pageIndex = pageIndexNumber ? [pageIndexNumber unsignedIntegerValue] : NSNotFound;
         label = [aLabel copy];
