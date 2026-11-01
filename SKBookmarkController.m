@@ -98,6 +98,13 @@ static NSArray *minimumCoverForBookmarks(NSArray *items);
 
 static inline NSLayoutConstraint *trailingConstraint(NSView *view);
 
+enum {
+    SKBookmarkTagBookmarksMenu = 10,
+    SKBookmarkTagPreviousSession,
+    SKBookmarkTagClosedDocuments,
+    SKBookmarkTagCurrentDocument,
+};
+
 @interface SKBookmarkController ()
 - (void)setupToolbar;
 - (void)saveBookmarksData;
@@ -106,6 +113,7 @@ static inline NSLayoutConstraint *trailingConstraint(NSView *view);
 - (void)startObservingBookmarks:(NSArray *)newBookmarks;
 - (void)stopObservingBookmarks:(NSArray *)oldBookmarks;
 @property (nonatomic, readonly) NSUndoManager *undoManager;
+- (NSArray *)closedDocumentBookmarks;
 @end
 
 @implementation SKBookmarkController
@@ -441,6 +449,11 @@ static NSUInteger maxRecentDocumentsCount = 0;
 }
 
 - (IBAction)openBookmark:(id)sender {
+    SKBookmark *bookmark = [sender representedObject];
+    if ([sender tag] == SKBookmarkTagClosedDocuments && [bookmark countOfChildren] == 0) {
+        NSArray *children = [self closedDocumentBookmarks];
+        [bookmark insertChildren:children atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [children count])]];
+    }
     [[NSDocumentController sharedDocumentController] openDocumentWithBookmark:[sender representedObject] completionHandler:^(NSDocument *document, BOOL documentWasAlreadyOpen, NSError *error){
         if (document == nil && error && [error isUserCancelledError] == NO)
             [NSApp presentError:error];
@@ -674,13 +687,6 @@ static inline BOOL containsFolders(SKBookmark *bookmark) {
     }
     return NO;
 }
-
-enum {
-    SKBookmarkTagBookmarksMenu = 10,
-    SKBookmarkTagPreviousSession,
-    SKBookmarkTagClosedDocuments,
-    SKBookmarkTagCurrentDocument,
-};
 
 - (void)menuNeedsUpdate:(NSMenu *)menu {
     if (menu == [outlineView menu]) {
