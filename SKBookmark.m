@@ -485,10 +485,11 @@ static Class SKBookmarkClass = Nil;
         pageIndex = pageIndexNumber ? [pageIndexNumber unsignedIntegerValue] : NSNotFound;
         label = [aLabel copy];
         if ([aSetupDict objectForKey:SKDocumentSetupWindowFrameKey]) {
-            setup = [aSetupDict mutableCopy];
-            [(NSMutableDictionary *)setup removeObjectsForKeys:@[TYPE_KEY, ALIASDATA_KEY, BOOKMARK_KEY, LABEL_KEY]];
+            NSMutableDictionary *mutSetupDict = [aSetupDict mutableCopy];
+            [mutSetupDict removeObjectsForKeys:@[TYPE_KEY, ALIASDATA_KEY, BOOKMARK_KEY, LABEL_KEY]];
             if (pageIndexNumber && pageIndex == NSNotFound)
-                [(NSMutableDictionary *)setup removeObjectForKey:PAGEINDEX_KEY];
+                [mutSetupDict removeObjectForKey:PAGEINDEX_KEY];
+            setup = [mutSetupDict copy];
         } else if ([aSetupDict objectForKey:SNAPSHOTS_KEY]) {
             setup = @{SNAPSHOTS_KEY:[aSetupDict objectForKey:SNAPSHOTS_KEY]};
         } else {
