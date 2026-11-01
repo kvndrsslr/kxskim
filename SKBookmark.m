@@ -338,10 +338,6 @@ static Class SKBookmarkClass = Nil;
     return (id)[[SKFileBookmark alloc] initWithURL:aURL pageIndex:aPageIndex snapshots:aSnapshots label:nil];
 }
 
-- (instancetype)initWithURL:(NSURL *)aURL pageIndex:(NSUInteger)aPageIndex snapshots:(NSArray *)aSnapshots label:(NSString *)aLabel {
-    return (id)[[SKFileBookmark alloc] initWithURL:aURL pageIndex:aPageIndex snapshots:aSnapshots label:aLabel];
-}
-
 - (instancetype)initWithSetup:(NSDictionary *)aSetupDict label:(NSString *)aLabel {
     return (id)[[SKFileBookmark alloc] initWithSetup:aSetupDict label:aLabel];
 }
