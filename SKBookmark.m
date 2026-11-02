@@ -547,7 +547,7 @@ static Class SKBookmarkClass = Nil;
     if (cachedFileURL == nil) {
         fileURL = [alias fileURLNoUI];
         [self setCachedFileURL:fileURL ?: (id)[NSNull null]];
-    } else if ([cachedFileURL isEqual:[NSNull null]] == NO) {
+    } else if ([cachedFileURL isKindOfClass:[NSURL class]]) {
         fileURL = cachedFileURL;
     }
     return fileURL;
@@ -562,7 +562,7 @@ static Class SKBookmarkClass = Nil;
 }
 
 - (NSURL *)fileURLToOpen {
-    if (cachedFileURL && [cachedFileURL isEqual:[NSNull null]] == NO)
+    if ([cachedFileURL isKindOfClass:[NSURL class]])
         return cachedFileURL;
     else
         return [alias fileURL];
