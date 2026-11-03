@@ -127,15 +127,13 @@ NSNotificationName const SKDocumentFileURLDidChangeNotification = @"SKDocumentFi
 - (NSDictionary *)currentDocumentSetup {
     NSMutableDictionary *setup = [NSMutableDictionary dictionary];
     NSURL *fileURL = [self fileURL];
+    SKAlias *alias = fileURL ? [[SKAlias alloc] initWithURL:fileURL] : nil;
+    NSData *data = [alias data];
     
-    if (fileURL) {
-        SKAlias *alias = [[SKAlias alloc] initWithURL:fileURL];
-        NSData *data = [alias data];
-        if (data)
-            [setup setObject:data forKey:[alias isBookmark] ? SKDocumentSetupBookmarkKey : SKDocumentSetupAliasKey];
-    } else {
+    if (data)
+        [setup setObject:data forKey:[alias isBookmark] ? SKDocumentSetupBookmarkKey : SKDocumentSetupAliasKey];
+    else
         [setup setObject:[self displayName] forKey:@"label"];
-    }
     
     NSWindow *window = [self primaryWindow];
     if (window) {
