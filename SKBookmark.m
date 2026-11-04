@@ -386,7 +386,7 @@ static Class SKBookmarkClass = Nil;
             } else
                 NSLog(@"Failed to read child bookmark: %@", dict);
         }
-        return (id)[[bookmarkClass alloc] initFolderWithChildren:newChildren label:[dictionary objectForKey:LABEL_KEY]];
+        return (id)[[bookmarkClass alloc] initWithChildren:newChildren label:[dictionary objectForKey:LABEL_KEY]];
     } else {
         return (id)[[SKFileBookmark alloc] initWithSetup:dictionary label:[dictionary objectForKey:LABEL_KEY]];
     }
