@@ -1264,8 +1264,9 @@ static const CGFloat SKPageEdgeSeamWidth = 2.0; // device pixels
 
 // PDFKit applies pageBreakMargins around every page, so we only inset along the axes along which pages repeat,
 // which keeps the fitted axis flush with the pane; the gap is split between the neighbouring pages. In the
-// two-up modes the two pages of a spread form a single page break, so they must touch: the gap only separates
-// spreads, along the axis on which spreads stack.
+// two-up continuous mode the two pages of a spread form a single page break, so they must touch: the gap only
+// separates spreads, along the axis on which spreads stack. The non-continuous modes show one page or one
+// spread at a time, so a gap there would only pad the pane around it, and they get no margins at all.
 - (void)updatePageBreakMargins {
     [self updatePageShadows];
     CGFloat gap = pageGap;
@@ -1279,7 +1280,6 @@ static const CGFloat SKPageEdgeSeamWidth = 2.0; // device pixels
             case kPDFDisplayHorizontalContinuous:
                 margins = NSEdgeInsetsMake(0.0, 0.5 * gap, 0.0, 0.5 * gap);
                 break;
-            case kPDFDisplayTwoUp:
             case kPDFDisplayTwoUpContinuous:
                 margins = horizontal ? NSEdgeInsetsMake(0.0, 0.5 * gap, 0.0, 0.5 * gap)
                                      : NSEdgeInsetsMake(0.5 * gap, 0.0, 0.5 * gap, 0.0);

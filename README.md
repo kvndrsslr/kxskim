@@ -17,9 +17,10 @@ The toolbar hides with it, and the side panes and the find bar keep their top in
 strip, so the contents pane's tab buttons and search field, and the find bar's search field,
 Find Previous/Next and Done, all stay clickable while the chrome is hidden. Viewport padding and
 page gap settings live in **Settings → General**; the page gap separates pages in the single-page
-continuous modes, and in the two-up and book modes it only separates spreads, so the two pages of a
-spread touch. In horizontal continuous display mode
-the Contents pane's destinations keep the start of the target page clear of the pane, and a jump
+continuous modes, and in the two-up continuous mode it only separates spreads, so the two pages of a
+spread touch. The non-continuous modes show one page or one spread at a time, so they ignore the gap:
+there it would only pad the pane around the page. In horizontal continuous display mode the
+Contents pane's destinations keep the start of the target page clear of the pane, and a jump
 briefly highlights the destination. Page edges stay clean: PDFKit fills every page rect with a
 view-global page color underneath the page content, and where the scaled page rect misses the
 device-pixel grid that fill shows as a 1px antialiasing line along the page edges. The fill follows
