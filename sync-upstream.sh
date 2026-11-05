@@ -3,7 +3,7 @@
 # Rebase this fork onto the latest upstream Skim revision.
 #
 # Upstream lives in Subversion; the local mirror at $SKIM_UPSTREAM_MIRROR is a git-svn clone of it.
-# See the "Tracking upstream" section of README.md for the one-time setup.
+# If the mirror is missing, this script prints the clone command.
 
 set -e
 

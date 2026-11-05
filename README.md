@@ -61,33 +61,4 @@ The fork keeps upstream's bundle identifier on purpose, so `kxskim` conflicts wi
 
 ## Tracking upstream
 
-Upstream Skim is developed in Subversion at `svn://svn.code.sf.net/p/skim-app/code`
-(`trunk`, `branches`, `tags`); there is no maintained Git mirror. This fork tracks it through a
-local git-svn clone, so upstream history stays queryable in Git:
-
-```sh
-brew install git-svn
-git svn clone --log-window-size=5000 -r 16690:HEAD -T trunk \
-  https://svn.code.sf.net/p/skim-app/code ~/src/skim-upstream
-
-cd ~/repos/private/kxskim
-git remote add upstream ~/src/skim-upstream
-git fetch upstream
-```
-
-Branch roles:
-
-- `main` carries only the fork's own commits, rebased on top of upstream; `git log
-  upstream/main..main` lists exactly the fork's delta.
-- `upstream/main` is the git-svn mirror, fetched read-only. Its commit hashes are rewritten by
-  git-svn, so they are never referenced from published history.
-
-Sync with `./sync-upstream.sh`: it runs `git svn fetch` in the mirror, updates `upstream/main`,
-saves the fork commits as patches to `$TMPDIR/skim-fork-patches`, rebases `main`, and prints a
-`git range-diff` of the rebase. Rebase conflict resolutions are reused through `git rerere`
-(`git config rerere.enabled true`). The rebase rewrites history, so publish with
-`git push --force-with-lease origin main`; the cask consumes release artifacts, not commits.
-
-The clone starts at r16690 rather than r1: rebasing needs a base whose tree is upstream's current
-state, not twenty years of binary churn, and the full import takes hours. Later `git svn fetch`
-calls pick up new revisions incrementally.
+Upstream Skim lives in Subversion; `./sync-upstream.sh` rebases this fork onto the latest revision.
