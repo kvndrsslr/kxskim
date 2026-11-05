@@ -38,10 +38,17 @@
 
 #import "SKMainWindow.h"
 #import "NSEvent_SKExtensions.h"
+#import <QuartzCore/QuartzCore.h>
+
+static const NSTimeInterval SKTitleBarChromeAnimationDuration = 0.25;
+static const NSTimeInterval SKTitleBarHoverDelay = 0.15;
 
 
 @interface NSWindow (SKPrivateDeclarations)
 - (NSTitlebarAccessoryViewController *)_tabBarAccessoryViewController;
+// fades the whole titlebar, including its material background; animatable through -animator
+- (CGFloat)titlebarAlphaValue;
+- (void)setTitlebarAlphaValue:(CGFloat)alpha;
 @end
 
 #pragma mark -
@@ -72,6 +79,9 @@
 {
     SKTitleBarHoverView *titleBarHoverView;
     BOOL toolbarShown;
+    BOOL titleBarChromeHidden;
+    BOOL titleBarChromeTargetHidden;
+    NSUInteger titleBarChromeAnimationGeneration;
 }
 - (void)setTitleBarHovered:(BOOL)hovered;
 @end
@@ -112,8 +122,15 @@
 @synthesize autoTitleVisibility, autoHidesTitleBar;
 @dynamic delegate;
 
-- (void)updateTitleBarChrome {
-    BOOL hidden = autoHidesTitleBar && titleBarHovered == NO && 0 == ([self styleMask] & NSWindowStyleMaskFullScreen);
+- (void)animateTitleBarAlpha:(CGFloat)alpha completionHandler:(void (^)(void))completionHandler {
+    [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
+        [context setDuration:SKTitleBarChromeAnimationDuration];
+        [context setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+        [[self animator] setValue:@(alpha) forKey:@"titlebarAlphaValue"];
+    } completionHandler:completionHandler];
+}
+
+- (void)applyTitleBarChromeHidden:(BOOL)hidden {
     // the toolbar hides and shows together with the title bar, but only its *visibility* is
     // suppressed while the chrome is hidden; the user's preference in toolbarShown is never
     // changed here, so it is restored exactly when the chrome shows again
@@ -138,17 +155,64 @@
         [[self standardWindowButton:button] setHidden:hidden];
 }
 
+- (void)setTitleBarChromeHidden:(BOOL)hidden animated:(BOOL)animated {
+    titleBarChromeTargetHidden = hidden;
+    titleBarChromeAnimationGeneration++;
+    NSUInteger generation = titleBarChromeAnimationGeneration;
+    BOOL canFade = [self respondsToSelector:@selector(titlebarAlphaValue)] && [self respondsToSelector:@selector(setTitlebarAlphaValue:)];
+
+    if (hidden == NO) {
+        if (titleBarChromeHidden) {
+            // make the chrome visible while it is still fully transparent, so it fades in rather than pops
+            [self applyTitleBarChromeHidden:NO];
+            titleBarChromeHidden = NO;
+        }
+        if (canFade && [self titlebarAlphaValue] != 1.0) {
+            if (animated)
+                [self animateTitleBarAlpha:1.0 completionHandler:nil];
+            else
+                [self setTitlebarAlphaValue:1.0];
+        }
+    } else if (canFade == NO || animated == NO) {
+        if (canFade)
+            [self setTitlebarAlphaValue:0.0];
+        [self applyTitleBarChromeHidden:YES];
+        titleBarChromeHidden = YES;
+    } else {
+        // hide the chrome state only once it has faded out, so the fade is not cut short
+        [self animateTitleBarAlpha:0.0 completionHandler:^{
+            if (generation != self->titleBarChromeAnimationGeneration || self->titleBarChromeTargetHidden == NO)
+                return;
+            [self applyTitleBarChromeHidden:YES];
+            self->titleBarChromeHidden = YES;
+            [self setTitlebarAlphaValue:0.0];
+        }];
+    }
+}
+
+- (void)updateTitleBarChrome {
+    BOOL hidden = autoHidesTitleBar && titleBarHovered == NO && 0 == ([self styleMask] & NSWindowStyleMaskFullScreen);
+    [self setTitleBarChromeHidden:hidden animated:[self isVisible]];
+}
+
 - (void)setTitleBarHovered:(BOOL)hovered {
     if (titleBarHovered == hovered)
         return;
     titleBarHovered = hovered;
-    [self updateTitleBarChrome];
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(updateTitleBarChrome) object:nil];
+    // a pointer that only crosses the top strip should not flash the chrome, so show it only
+    // after the pointer has stayed there for a moment
+    if (hovered && titleBarChromeTargetHidden)
+        [self performSelector:@selector(updateTitleBarChrome) withObject:nil afterDelay:SKTitleBarHoverDelay];
+    else
+        [self updateTitleBarChrome];
 }
 
 - (void)setAutoHidesTitleBar:(BOOL)flag {
     if (autoHidesTitleBar == flag)
         return;
     autoHidesTitleBar = flag;
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(updateTitleBarChrome) object:nil];
     if (flag) {
         // remember whether the user wants the toolbar, as its visibility is the truth we
         // need to restore when the chrome shows or the feature is turned off again

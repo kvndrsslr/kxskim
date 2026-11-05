@@ -8,8 +8,9 @@ the built `.dmg` artifacts only; the source lives locally in the development che
 ## Fork change
 
 The window title bar — background, separator, title, and all window controls — is hidden until the
-pointer enters the top of the window. Enable it in **Settings → General → "Hide window title bar
-unless hovered"** (default `SKHideWindowTitleBar`, also settable with
+pointer rests briefly at the top of the window, fading in and out over a quarter second. Enable it in
+**Settings → General → "Hide window title bar unless hovered"** (default `SKHideWindowTitleBar`, also
+settable with
 `defaults write net.sourceforge.skim-app.skim SKHideWindowTitleBar -bool YES`). While it is enabled
 the title bar reserves no space, so the first row of the PDF is drawn at the first row of the window.
 The toolbar hides with it, and the side panes and the find bar keep their top inset clear of that
