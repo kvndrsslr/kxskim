@@ -36,6 +36,9 @@ BRANCH=$(git -C "$MIRROR" symbolic-ref --short HEAD 2>/dev/null || echo master)
 
 echo "==> fetching upstream SVN into $MIRROR"
 git -C "$MIRROR" svn fetch
+# git svn fetch only moves the svn tracking ref; fast-forward the mirror's branch so that
+# `git fetch upstream` below picks the new revision up.
+git -C "$MIRROR" merge --ff-only origin/trunk >/dev/null
 
 echo "==> updating the upstream remote"
 git fetch --quiet upstream
