@@ -70,7 +70,7 @@ brew install git-svn
 git svn clone --log-window-size=5000 -r 16690:HEAD -T trunk \
   https://svn.code.sf.net/p/skim-app/code ~/src/skim-upstream
 
-cd ~/repos/private/skim
+cd ~/repos/private/kxskim
 git remote add upstream ~/src/skim-upstream
 git fetch upstream
 ```
