@@ -6,7 +6,7 @@ Context for agents working in this repository on the first turn.
 
 Personal fork of Skim, the macOS PDF reader. The source is a snapshot of upstream 1.7.17 plus the
 fork's own commits; upstream itself lives in Subversion, not Git. The fork is published as
-`Skim-<version>.dmg` releases on `kvndrsslr/skim` and consumed by the `kxskim` cask in
+`Skim-<version>.dmg` releases on `kvndrsslr/kxskim` and consumed by the `kxskim` cask in
 `kvndrsslr/homebrew-formulae`. User-visible fork features are described in the "Fork change"
 section of `README.md`; keep that section current when a change is visible to the user.
 
@@ -41,7 +41,7 @@ Then package and publish:
 ```sh
 hdiutil create -volname Skim -srcfolder <staging with Skim.app and /Applications symlink> \
   -ov -format UDZO /tmp/Skim-1.7.17.1.dmg
-gh release create v1.7.17.1 /tmp/Skim-1.7.17.1.dmg --repo kvndrsslr/skim --title … --notes …
+gh release create v1.7.17.1 /tmp/Skim-1.7.17.1.dmg --repo kvndrsslr/kxskim --title … --notes …
 # then bump version and sha256 in Casks/kxskim.rb of kvndrsslr/homebrew-formulae and push
 brew reinstall --cask kvndrsslr/formulae/kxskim
 ```
